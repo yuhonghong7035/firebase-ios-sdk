@@ -507,7 +507,7 @@ std::unique_ptr<MaybeDocument> Serializer::DecodeBatchGetDocumentsResponse(
   // Initialize BatchGetDocumentsResponse fields to their default values
   std::unique_ptr<MaybeDocument> found = nullptr;
   std::string missing;
-  // TODO(rsgowman): transaction
+  // We explicitly ignore the 'transaction' field
   SnapshotVersion read_time = SnapshotVersion::None();
 
   while (reader->bytes_left()) {
@@ -518,6 +518,7 @@ std::unique_ptr<MaybeDocument> Serializer::DecodeBatchGetDocumentsResponse(
     switch (tag.field_number) {
       case google_firestore_v1beta1_BatchGetDocumentsResponse_found_tag:
       case google_firestore_v1beta1_BatchGetDocumentsResponse_missing_tag:
+      case google_firestore_v1beta1_BatchGetDocumentsResponse_transaction_tag:
       case google_firestore_v1beta1_BatchGetDocumentsResponse_read_time_tag:
         if (tag.wire_type != PB_WT_STRING) {
           reader->set_status(
@@ -526,10 +527,6 @@ std::unique_ptr<MaybeDocument> Serializer::DecodeBatchGetDocumentsResponse(
                      "the wiretype and the field number (tag))"));
         }
         break;
-
-      case google_firestore_v1beta1_BatchGetDocumentsResponse_transaction_tag:
-        // TODO(rsgowman)
-        abort();
 
       default:
         reader->set_status(Status(
@@ -562,8 +559,10 @@ std::unique_ptr<MaybeDocument> Serializer::DecodeBatchGetDocumentsResponse(
         break;
 
       case google_firestore_v1beta1_BatchGetDocumentsResponse_transaction_tag:
-        // TODO(rsgowman)
-        abort();
+        // This field is ignored by the client sdk, but we still need to extract
+        // it.
+        reader->ReadString();
+        break;
 
       case google_firestore_v1beta1_BatchGetDocumentsResponse_read_time_tag:
         // TODO(rsgowman): Rather than overwriting, we should instead merge with
