@@ -801,15 +801,16 @@ static BOOL gRespondsToHandleBackgroundSession;
   [mainBundleMock stopMocking];
 }
 
-// TODO(tejasd): This test fails because there is some change in behavior of protocol mocks
-// in OCMock. Migrate to doing this without protocol mocks.
+// TODO(tejasd): There is some weirdness that happens (at least when running this locally on Xcode)
+// where the actual app delegate is nilled out in one of these tests, causing the tests to fail.
+// Disabling this test seems to fix the problem.
 
 /** Tests that the App Delegate is proxied when it is enabled. */
 - (void)skipped_testAppDelegateIsProxiedWhenEnabled {
   // App Delegate Proxying is enabled by default.
   XCTAssertTrue([GULAppDelegateSwizzler isAppDelegateProxyEnabled]);
 
-  id originalAppDelegate = OCMProtocolMock(@protocol(UIApplicationDelegate));
+  id originalAppDelegate = [[GULTestAppDelegate alloc] init];
   Class originalAppDelegateClass = [originalAppDelegate class];
   XCTAssertNotNil(originalAppDelegate);
 
