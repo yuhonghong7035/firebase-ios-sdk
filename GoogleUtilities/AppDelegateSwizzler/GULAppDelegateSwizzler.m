@@ -46,6 +46,8 @@ static char const *const kGULOpenURLOptionsSourceAnnotationsIMPKey =
 static char const *const kGULRealClassKey = "GUL_realClass";
 static NSString *const kGULAppDelegateKeyPath = @"delegate";
 
+static GULLoggerService kGULLoggerSwizzler = @"[GoogleUtilities/AppDelegateSwizzler]";
+
 // Since Firebase SDKs also use this for app delegate proxying, in order to not be a breaking change
 // we disable App Delegate proxying when either of these two flags are set to NO.
 

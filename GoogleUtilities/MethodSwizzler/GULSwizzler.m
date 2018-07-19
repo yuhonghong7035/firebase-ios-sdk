@@ -25,6 +25,8 @@
 #import <GoogleUtilities/GULSwizzlingCache_Private.h>
 #endif
 
+static GULLoggerService kGULLoggerSwizzler = @"[GoogleUtilites/MethodSwizzler]";
+
 dispatch_queue_t GetGULSwizzlingQueue() {
   static dispatch_queue_t queue;
   static dispatch_once_t onceToken;

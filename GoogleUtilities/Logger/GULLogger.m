@@ -40,10 +40,6 @@ static const char *sVersion = "";
 
 static GULLoggerService kGULLoggerLogger = @"[GULLogger]";
 
-// TODO(tejasd): Have a more fine grained logger service for AppDelegateSwizzler, MethodSwizzler
-// and ISASwizzler.
-GULLoggerService kGULLoggerSwizzler = @"[GoogleUtilities/Swizzler]";
-
 #ifdef DEBUG
 /// The regex pattern for the message code.
 static NSString *const kMessageCodePattern = @"^I-[A-Z]{3}[0-9]{6}$";

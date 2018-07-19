@@ -25,8 +25,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 typedef NSString *const GULLoggerService;
 
-extern GULLoggerService kGULLoggerSwizzler;
-
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
