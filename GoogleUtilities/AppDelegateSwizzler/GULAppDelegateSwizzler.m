@@ -21,10 +21,6 @@
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
 
-// TODO(tdeshpande): Have a more fine grained logger service for AppDelegateSwizzler, MethodSwizzler
-// and ISASwizzler.
-GULLoggerService kGULLoggerSwizzler = @"[GoogleUtilities/Swizzler]";
-
 // Implementations need to be typed before calling the implementation directly to cast the
 // arguments and the return types correctly. Otherwise, it will crash the app.
 typedef BOOL (*GULRealOpenURLSourceApplicationAnnotationIMP)(id, SEL, UIApplication *, NSURL *,

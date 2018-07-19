@@ -51,28 +51,16 @@
 		DEC9788720F6E1E000014E20 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DEC9788020F6E1DF00014E20 /* Main.storyboard */; };
 		DEC9788820F6E1E000014E20 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DEC9788120F6E1DF00014E20 /* main.m */; };
 		DEC9788920F6E1E000014E20 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DEC9788220F6E1DF00014E20 /* AppDelegate.m */; };
+		EF2BB517210103FA002282D1 /* GULRuntimeClassDiffTests.m in Sources */ = {isa = PBXBuildFile; fileRef = EF2BB510210103F0002282D1 /* GULRuntimeClassDiffTests.m */; };
+		EF2BB51821010636002282D1 /* GULSwizzlingCacheTest.m in Sources */ = {isa = PBXBuildFile; fileRef = EF2BB50B210103F0002282D1 /* GULSwizzlingCacheTest.m */; };
+		EF2BB5192101063A002282D1 /* GULRuntimeStateHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = EF2BB50F210103F0002282D1 /* GULRuntimeStateHelperTests.m */; };
+		EF2BB51A2101063E002282D1 /* GULRuntimeSnapshotTests.m in Sources */ = {isa = PBXBuildFile; fileRef = EF2BB50E210103F0002282D1 /* GULRuntimeSnapshotTests.m */; };
+		EF2BB51B21010671002282D1 /* GULRuntimeDiffTests.m in Sources */ = {isa = PBXBuildFile; fileRef = EF2BB50C210103F0002282D1 /* GULRuntimeDiffTests.m */; };
 		EF546C7320FFF6CF0077284A /* GULSwizzlerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C5920FFF6CF0077284A /* GULSwizzlerTest.m */; };
 		EF546C7520FFF6CF0077284A /* GULObjectSwizzlerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C5A20FFF6CF0077284A /* GULObjectSwizzlerTest.m */; };
 		EF546C7720FFF6CF0077284A /* GULSwizzlerInheritedMethodsSwizzlingTest.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C5B20FFF6CF0077284A /* GULSwizzlerInheritedMethodsSwizzlingTest.m */; };
-		EF546C7820FFF6CF0077284A /* GULRuntimeStateHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C5D20FFF6CF0077284A /* GULRuntimeStateHelper.m */; };
-		EF546C7920FFF6CF0077284A /* GULRuntimeStateHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C5D20FFF6CF0077284A /* GULRuntimeStateHelper.m */; };
-		EF546C7A20FFF6CF0077284A /* GULSwizzlingCache.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C5E20FFF6CF0077284A /* GULSwizzlingCache.m */; };
-		EF546C7B20FFF6CF0077284A /* GULSwizzlingCache.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C5E20FFF6CF0077284A /* GULSwizzlingCache.m */; };
-		EF546C7D20FFF6CF0077284A /* GULSwizzlingCacheTest.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C6220FFF6CF0077284A /* GULSwizzlingCacheTest.m */; };
-		EF546C7F20FFF6CF0077284A /* GULRuntimeClassDiffTests.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C6320FFF6CF0077284A /* GULRuntimeClassDiffTests.m */; };
-		EF546C8120FFF6CF0077284A /* GULRuntimeClassSnapshotTests.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C6420FFF6CF0077284A /* GULRuntimeClassSnapshotTests.m */; };
-		EF546C8320FFF6CF0077284A /* GULRuntimeDiffTests.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C6520FFF6CF0077284A /* GULRuntimeDiffTests.m */; };
-		EF546C8520FFF6CF0077284A /* GULRuntimeStateHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C6620FFF6CF0077284A /* GULRuntimeStateHelperTests.m */; };
-		EF546C8720FFF6CF0077284A /* GULRuntimeSnapshotTests.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C6720FFF6CF0077284A /* GULRuntimeSnapshotTests.m */; };
-		EF546C8820FFF6CF0077284A /* GULRuntimeDiff.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C6920FFF6CF0077284A /* GULRuntimeDiff.m */; };
-		EF546C8920FFF6CF0077284A /* GULRuntimeDiff.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C6920FFF6CF0077284A /* GULRuntimeDiff.m */; };
-		EF546C8A20FFF6CF0077284A /* GULRuntimeClassDiff.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C6C20FFF6CF0077284A /* GULRuntimeClassDiff.m */; };
-		EF546C8B20FFF6CF0077284A /* GULRuntimeClassDiff.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C6C20FFF6CF0077284A /* GULRuntimeClassDiff.m */; };
-		EF546C8C20FFF6CF0077284A /* GULRuntimeSnapshot.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C6E20FFF6CF0077284A /* GULRuntimeSnapshot.m */; };
-		EF546C8D20FFF6CF0077284A /* GULRuntimeSnapshot.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C6E20FFF6CF0077284A /* GULRuntimeSnapshot.m */; };
-		EF546C8E20FFF6CF0077284A /* GULRuntimeClassSnapshot.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C7020FFF6CF0077284A /* GULRuntimeClassSnapshot.m */; };
-		EF546C8F20FFF6CF0077284A /* GULRuntimeClassSnapshot.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C7020FFF6CF0077284A /* GULRuntimeClassSnapshot.m */; };
 		EF546C9120FFF6CF0077284A /* GULAppDelegateSwizzlerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = EF546C7120FFF6CF0077284A /* GULAppDelegateSwizzlerTest.m */; };
+		EFF93D122101084F001A1DB7 /* GULRuntimeClassSnapshotTests.m in Sources */ = {isa = PBXBuildFile; fileRef = EF2BB50D210103F0002282D1 /* GULRuntimeClassSnapshotTests.m */; };
 		F8A6449BC03123AEE300BB49 /* Pods_Tests_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C7EA2B87ECBE39BCB68FE9D3 /* Pods_Tests_iOS.framework */; };
 /* End PBXBuildFile section */
 
@@ -163,28 +151,15 @@
 		E0A8D570636E99E7C3396DF8 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		E38969C2B8176586C8788429 /* Pods-Tests_iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tests_iOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Tests_iOS/Pods-Tests_iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		E3FBF6433D2F801BC2016BAB /* Pods-Tests_macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tests_macOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Tests_macOS/Pods-Tests_macOS.debug.xcconfig"; sourceTree = "<group>"; };
+		EF2BB50B210103F0002282D1 /* GULSwizzlingCacheTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULSwizzlingCacheTest.m; sourceTree = "<group>"; };
+		EF2BB50C210103F0002282D1 /* GULRuntimeDiffTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeDiffTests.m; sourceTree = "<group>"; };
+		EF2BB50D210103F0002282D1 /* GULRuntimeClassSnapshotTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeClassSnapshotTests.m; sourceTree = "<group>"; };
+		EF2BB50E210103F0002282D1 /* GULRuntimeSnapshotTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeSnapshotTests.m; sourceTree = "<group>"; };
+		EF2BB50F210103F0002282D1 /* GULRuntimeStateHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeStateHelperTests.m; sourceTree = "<group>"; };
+		EF2BB510210103F0002282D1 /* GULRuntimeClassDiffTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeClassDiffTests.m; sourceTree = "<group>"; };
 		EF546C5920FFF6CF0077284A /* GULSwizzlerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULSwizzlerTest.m; sourceTree = "<group>"; };
 		EF546C5A20FFF6CF0077284A /* GULObjectSwizzlerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULObjectSwizzlerTest.m; sourceTree = "<group>"; };
 		EF546C5B20FFF6CF0077284A /* GULSwizzlerInheritedMethodsSwizzlingTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULSwizzlerInheritedMethodsSwizzlingTest.m; sourceTree = "<group>"; };
-		EF546C5D20FFF6CF0077284A /* GULRuntimeStateHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeStateHelper.m; sourceTree = "<group>"; };
-		EF546C5E20FFF6CF0077284A /* GULSwizzlingCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULSwizzlingCache.m; sourceTree = "<group>"; };
-		EF546C5F20FFF6CF0077284A /* GULRuntimeClassDiff.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GULRuntimeClassDiff.h; sourceTree = "<group>"; };
-		EF546C6020FFF6CF0077284A /* GULRuntimeSnapshot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GULRuntimeSnapshot.h; sourceTree = "<group>"; };
-		EF546C6220FFF6CF0077284A /* GULSwizzlingCacheTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULSwizzlingCacheTest.m; sourceTree = "<group>"; };
-		EF546C6320FFF6CF0077284A /* GULRuntimeClassDiffTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeClassDiffTests.m; sourceTree = "<group>"; };
-		EF546C6420FFF6CF0077284A /* GULRuntimeClassSnapshotTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeClassSnapshotTests.m; sourceTree = "<group>"; };
-		EF546C6520FFF6CF0077284A /* GULRuntimeDiffTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeDiffTests.m; sourceTree = "<group>"; };
-		EF546C6620FFF6CF0077284A /* GULRuntimeStateHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeStateHelperTests.m; sourceTree = "<group>"; };
-		EF546C6720FFF6CF0077284A /* GULRuntimeSnapshotTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeSnapshotTests.m; sourceTree = "<group>"; };
-		EF546C6820FFF6CF0077284A /* GULRuntimeClassSnapshot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GULRuntimeClassSnapshot.h; sourceTree = "<group>"; };
-		EF546C6920FFF6CF0077284A /* GULRuntimeDiff.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeDiff.m; sourceTree = "<group>"; };
-		EF546C6A20FFF6CF0077284A /* GULRuntimeStateHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GULRuntimeStateHelper.h; sourceTree = "<group>"; };
-		EF546C6B20FFF6CF0077284A /* GULSwizzlingCache_Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GULSwizzlingCache_Private.h; sourceTree = "<group>"; };
-		EF546C6C20FFF6CF0077284A /* GULRuntimeClassDiff.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeClassDiff.m; sourceTree = "<group>"; };
-		EF546C6D20FFF6CF0077284A /* GULSwizzlingCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GULSwizzlingCache.h; sourceTree = "<group>"; };
-		EF546C6E20FFF6CF0077284A /* GULRuntimeSnapshot.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeSnapshot.m; sourceTree = "<group>"; };
-		EF546C6F20FFF6CF0077284A /* GULRuntimeDiff.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GULRuntimeDiff.h; sourceTree = "<group>"; };
-		EF546C7020FFF6CF0077284A /* GULRuntimeClassSnapshot.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULRuntimeClassSnapshot.m; sourceTree = "<group>"; };
 		EF546C7120FFF6CF0077284A /* GULAppDelegateSwizzlerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GULAppDelegateSwizzlerTest.m; sourceTree = "<group>"; };
 		F1F2A7C03C10A3A03F9502B8 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -432,47 +407,18 @@
 		EF546C5820FFF6CF0077284A /* Swizzler */ = {
 			isa = PBXGroup;
 			children = (
+				EF2BB510210103F0002282D1 /* GULRuntimeClassDiffTests.m */,
+				EF2BB50D210103F0002282D1 /* GULRuntimeClassSnapshotTests.m */,
+				EF2BB50C210103F0002282D1 /* GULRuntimeDiffTests.m */,
+				EF2BB50E210103F0002282D1 /* GULRuntimeSnapshotTests.m */,
+				EF2BB50F210103F0002282D1 /* GULRuntimeStateHelperTests.m */,
+				EF2BB50B210103F0002282D1 /* GULSwizzlingCacheTest.m */,
 				EF546C5920FFF6CF0077284A /* GULSwizzlerTest.m */,
 				EF546C5A20FFF6CF0077284A /* GULObjectSwizzlerTest.m */,
 				EF546C5B20FFF6CF0077284A /* GULSwizzlerInheritedMethodsSwizzlingTest.m */,
-				EF546C5C20FFF6CF0077284A /* Helper */,
 				EF546C7120FFF6CF0077284A /* GULAppDelegateSwizzlerTest.m */,
 			);
 			path = Swizzler;
-			sourceTree = "<group>";
-		};
-		EF546C5C20FFF6CF0077284A /* Helper */ = {
-			isa = PBXGroup;
-			children = (
-				EF546C5D20FFF6CF0077284A /* GULRuntimeStateHelper.m */,
-				EF546C5E20FFF6CF0077284A /* GULSwizzlingCache.m */,
-				EF546C5F20FFF6CF0077284A /* GULRuntimeClassDiff.h */,
-				EF546C6020FFF6CF0077284A /* GULRuntimeSnapshot.h */,
-				EF546C6120FFF6CF0077284A /* Tests */,
-				EF546C6820FFF6CF0077284A /* GULRuntimeClassSnapshot.h */,
-				EF546C6920FFF6CF0077284A /* GULRuntimeDiff.m */,
-				EF546C6A20FFF6CF0077284A /* GULRuntimeStateHelper.h */,
-				EF546C6B20FFF6CF0077284A /* GULSwizzlingCache_Private.h */,
-				EF546C6C20FFF6CF0077284A /* GULRuntimeClassDiff.m */,
-				EF546C6D20FFF6CF0077284A /* GULSwizzlingCache.h */,
-				EF546C6E20FFF6CF0077284A /* GULRuntimeSnapshot.m */,
-				EF546C6F20FFF6CF0077284A /* GULRuntimeDiff.h */,
-				EF546C7020FFF6CF0077284A /* GULRuntimeClassSnapshot.m */,
-			);
-			path = Helper;
-			sourceTree = "<group>";
-		};
-		EF546C6120FFF6CF0077284A /* Tests */ = {
-			isa = PBXGroup;
-			children = (
-				EF546C6220FFF6CF0077284A /* GULSwizzlingCacheTest.m */,
-				EF546C6320FFF6CF0077284A /* GULRuntimeClassDiffTests.m */,
-				EF546C6420FFF6CF0077284A /* GULRuntimeClassSnapshotTests.m */,
-				EF546C6520FFF6CF0077284A /* GULRuntimeDiffTests.m */,
-				EF546C6620FFF6CF0077284A /* GULRuntimeStateHelperTests.m */,
-				EF546C6720FFF6CF0077284A /* GULRuntimeSnapshotTests.m */,
-			);
-			path = Tests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -927,13 +873,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DEC977F120F6ACDA00014E20 /* main.m in Sources */,
-				EF546C7A20FFF6CF0077284A /* GULSwizzlingCache.m in Sources */,
 				DEC977EE20F6ACDA00014E20 /* ViewController.m in Sources */,
-				EF546C7820FFF6CF0077284A /* GULRuntimeStateHelper.m in Sources */,
-				EF546C8A20FFF6CF0077284A /* GULRuntimeClassDiff.m in Sources */,
-				EF546C8E20FFF6CF0077284A /* GULRuntimeClassSnapshot.m in Sources */,
-				EF546C8820FFF6CF0077284A /* GULRuntimeDiff.m in Sources */,
-				EF546C8C20FFF6CF0077284A /* GULRuntimeSnapshot.m in Sources */,
 				DEC977F420F6ACDA00014E20 /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -942,28 +882,22 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EF546C7F20FFF6CF0077284A /* GULRuntimeClassDiffTests.m in Sources */,
-				EF546C7B20FFF6CF0077284A /* GULSwizzlingCache.m in Sources */,
 				DEC977DD20F68FE100014E20 /* GTMHTTPServer.m in Sources */,
 				DEC977D820F68C3300014E20 /* GULMutableDictionaryTest.m in Sources */,
 				DEC977E120F6A7C100014E20 /* GULLoggerTest.m in Sources */,
 				EF546C7720FFF6CF0077284A /* GULSwizzlerInheritedMethodsSwizzlingTest.m in Sources */,
-				EF546C8920FFF6CF0077284A /* GULRuntimeDiff.m in Sources */,
 				EF546C9120FFF6CF0077284A /* GULAppDelegateSwizzlerTest.m in Sources */,
-				EF546C8B20FFF6CF0077284A /* GULRuntimeClassDiff.m in Sources */,
-				EF546C8720FFF6CF0077284A /* GULRuntimeSnapshotTests.m in Sources */,
 				EF546C7520FFF6CF0077284A /* GULObjectSwizzlerTest.m in Sources */,
-				EF546C8520FFF6CF0077284A /* GULRuntimeStateHelperTests.m in Sources */,
-				EF546C7920FFF6CF0077284A /* GULRuntimeStateHelper.m in Sources */,
-				EF546C8F20FFF6CF0077284A /* GULRuntimeClassSnapshot.m in Sources */,
 				DEC977D920F68C3300014E20 /* GULNetworkTest.m in Sources */,
+				EF2BB51A2101063E002282D1 /* GULRuntimeSnapshotTests.m in Sources */,
+				EF2BB5192101063A002282D1 /* GULRuntimeStateHelperTests.m in Sources */,
 				EF546C7320FFF6CF0077284A /* GULSwizzlerTest.m in Sources */,
-				EF546C8120FFF6CF0077284A /* GULRuntimeClassSnapshotTests.m in Sources */,
-				EF546C8D20FFF6CF0077284A /* GULRuntimeSnapshot.m in Sources */,
 				DE5CF98E20F686310063FFDD /* GULAppEnvironmentUtilTest.m in Sources */,
-				EF546C8320FFF6CF0077284A /* GULRuntimeDiffTests.m in Sources */,
+				EF2BB517210103FA002282D1 /* GULRuntimeClassDiffTests.m in Sources */,
+				EF2BB51B21010671002282D1 /* GULRuntimeDiffTests.m in Sources */,
 				DEC977D720F68C3300014E20 /* GULReachabilityCheckerTest.m in Sources */,
-				EF546C7D20FFF6CF0077284A /* GULSwizzlingCacheTest.m in Sources */,
+				EFF93D122101084F001A1DB7 /* GULRuntimeClassSnapshotTests.m in Sources */,
+				EF2BB51821010636002282D1 /* GULSwizzlingCacheTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

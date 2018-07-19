@@ -20,9 +20,9 @@
 #import <GoogleUtilities/GULLogger.h>
 
 #ifdef GUL_UNSWIZZLING_ENABLED
-#import "third_party/firebase/ios/Source/GoogleUtilities/Example/Tests/Swizzler/Helper/GULSwizzlingCache.h"
+#import <GoogleUtilities/GULSwizzlingCache.h>
 // We need a private method for an assert.
-#import "third_party/firebase/ios/Source/GoogleUtilities/Example/Tests/Swizzler/Helper/GULSwizzlingCache_Private.h"
+#import <GoogleUtilities/GULSwizzlingCache_Private.h>
 #endif
 
 dispatch_queue_t GetGULSwizzlingQueue() {

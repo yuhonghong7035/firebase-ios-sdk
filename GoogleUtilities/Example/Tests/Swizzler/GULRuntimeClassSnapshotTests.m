@@ -15,8 +15,8 @@
 #import <objc/runtime.h>
 #import <XCTest/XCTest.h>
 
-#import "GULRuntimeClassDiff.h"
-#import "GULRuntimeClassSnapshot.h"
+#import <GoogleUtilities/GULRuntimeClassDiff.h>
+#import <GoogleUtilities/GULRuntimeClassSnapshot.h>
 
 // A variable to be used as a backing store for a dynamic class property. */
 static NSString *dynamicClassBacking;
