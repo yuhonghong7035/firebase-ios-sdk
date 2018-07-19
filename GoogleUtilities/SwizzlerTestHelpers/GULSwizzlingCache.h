@@ -33,8 +33,8 @@
  *
  *  @param newIMP new The IMP that is going to replace the current IMP.
  *  @param currentIMP The IMP returned by class_getMethodImplementation.
- *  @param forClass The class that we're swizzling.
- *  @param withSelector The selector we're swizzling.
+ *  @param aClass The class that we're swizzling.
+ *  @param selector The selector we're swizzling.
  */
 - (void)cacheCurrentIMP:(IMP)currentIMP forNewIMP:(IMP)newIMP forClass:(Class)aClass withSelector:(SEL)selector;
 

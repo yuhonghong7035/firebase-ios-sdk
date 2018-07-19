@@ -71,7 +71,6 @@ other Google CocoaPods. They're not intended for direct public usage.
 
   s.subspec 'AppDelegateSwizzler' do |adss|
     adss.source_files = 'GoogleUtilities/AppDelegateSwizzler/**/*.[mh]', 'GoogleUtilities/Common/*.h'
-    # TODO: This is in place to solve the non-modular import header when running tests. Ideally remove this.
     adss.public_header_files = 'GoogleUtilities/AppDelegateSwizzler/Private/*.h'
     adss.private_header_files = 'GoogleUtilities/AppDelegateSwizzler/Private/*.h'
     adss.dependency 'GoogleUtilities/Logger'
