@@ -550,7 +550,7 @@ std::unique_ptr<MaybeDocument> Serializer::DecodeBatchGetDocumentsResponse(
     return absl::make_unique<NoDocument>(DecodeKey(missing), read_time);
   } else {
     reader->set_status(Status(FirestoreErrorCode::DataLoss,
-                              "Invalid BatchGetDocumentsReponse message: "
+                              "Invalid BatchGetDocumentsResponse message: "
                               "Neither 'found' nor 'missing' fields set."));
     return nullptr;
   }
