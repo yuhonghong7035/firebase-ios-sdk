@@ -119,6 +119,31 @@ NSDictionary<NSString *, id> *testDataWithTimestamps(FIRTimestamp *timestamp) {
   [self awaitExpectations];
 }
 
+- (void)testCrashingTests:(uint8_t[])input_bytes size:(int)length {
+  NSDictionary<NSString *, NSDictionary<NSString *, id> *> *noDocs = @{};
+  FIRCollectionReference *coll = [self collectionRefWithDocuments:noDocs];
+
+  NSString *string = [[NSString alloc] initWithBytes:input_bytes length:length encoding:NSUTF8StringEncoding];
+
+  XCTestExpectation *queryCompletion = [self expectationWithDescription:@"query"];
+  [[coll queryWhereField:string isEqualTo:@1]
+   getDocumentsWithCompletion:^(FIRQuerySnapshot * _Nullable snapshot, NSError * _Nullable error) {
+     [queryCompletion fulfill];
+   }];
+
+  [self awaitExpectations];
+}
+
+- (void)testCrashingInput1 {
+  uint8_t bytes[] = { 0x00 };
+  [self testCrashingTests:bytes size:1];
+}
+
+- (void)testCrashingInput2 {
+  uint8_t bytes[] = { 0x02, 0x00 };
+  [self testCrashingTests:bytes size:2];
+}
+
 /**
  * Creates test data with special characters in field names. Datastore currently prohibits mixing
  * nested data with special characters so tests that use this data must be separate.
