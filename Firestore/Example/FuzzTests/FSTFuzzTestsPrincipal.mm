@@ -23,6 +23,7 @@
 #include "absl/strings/str_join.h"
 
 #include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestFieldPath.h"
+#include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestFIRQuery.h"
 #include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestSerializer.h"
 
 #include "Firestore/core/src/firebase/firestore/util/log.h"
@@ -35,7 +36,7 @@ namespace fuzzing = firebase::firestore::fuzzing;
 
 // A list of targets to fuzz test. Should be kept in sync with
 // GetFuzzingTarget() fuzzing_target_names map object.
-enum class FuzzingTarget { kNone, kSerializer, kFieldPath };
+enum class FuzzingTarget { kNone, kSerializer, kFieldPath, kFIRQuery };
 
 // Directory to which crashing inputs are written. Must include the '/' at the
 // end because libFuzzer prepends this path to the crashing input file name.
@@ -46,10 +47,12 @@ NSString *kCrashingInputsDirectory = NSTemporaryDirectory();
 // Default target is kNone if the environment variable is empty, not set, or
 // could not be interpreted. Should be kept in sync with FuzzingTarget.
 FuzzingTarget GetFuzzingTarget() {
+  return FuzzingTarget::kFIRQuery;
   std::unordered_map<std::string, FuzzingTarget> fuzzing_target_names;
   fuzzing_target_names["NONE"] = FuzzingTarget::kNone;
   fuzzing_target_names["SERIALIZER"] = FuzzingTarget::kSerializer;
   fuzzing_target_names["FIELDPATH"] = FuzzingTarget::kFieldPath;
+  fuzzing_target_names["FIRQUERY"] = FuzzingTarget::kFIRQuery;
 
   const char *fuzzing_target_env = std::getenv("FUZZING_TARGET");
 
@@ -129,6 +132,12 @@ int RunFuzzTestingMain() {
       dict_location = fuzzing::GetFieldPathDictionaryLocation(resources_location);
       corpus_location = fuzzing::GetFieldPathCorpusLocation(resources_location);
       fuzzer_function = fuzzing::FuzzTestFieldPath;
+      break;
+
+    case FuzzingTarget::kFIRQuery:
+      dict_location = fuzzing::GetFIRQueryDictionaryLocation(resources_location);
+      corpus_location = fuzzing::GetFIRQueryCorpusLocation(resources_location);
+      fuzzer_function = fuzzing::FuzzTestFIRQuery;
       break;
 
     case FuzzingTarget::kNone:
