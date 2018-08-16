@@ -23,6 +23,7 @@
 #include "absl/strings/str_join.h"
 
 #include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestFieldPath.h"
+#include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestFieldValue.h"
 #include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestFIRQuery.h"
 #include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestSerializer.h"
 
@@ -36,7 +37,7 @@ namespace fuzzing = firebase::firestore::fuzzing;
 
 // A list of targets to fuzz test. Should be kept in sync with
 // GetFuzzingTarget() fuzzing_target_names map object.
-enum class FuzzingTarget { kNone, kSerializer, kFieldPath, kFIRQuery };
+enum class FuzzingTarget { kNone, kSerializer, kFieldPath, kFIRQuery, kFieldValue };
 
 // Directory to which crashing inputs are written. Must include the '/' at the
 // end because libFuzzer prepends this path to the crashing input file name.
@@ -47,12 +48,14 @@ NSString *kCrashingInputsDirectory = NSTemporaryDirectory();
 // Default target is kNone if the environment variable is empty, not set, or
 // could not be interpreted. Should be kept in sync with FuzzingTarget.
 FuzzingTarget GetFuzzingTarget() {
-  return FuzzingTarget::kFIRQuery;
+  // TODO(minafarid): remove the hard-coding return.
+  return FuzzingTarget::kFieldValue;
   std::unordered_map<std::string, FuzzingTarget> fuzzing_target_names;
   fuzzing_target_names["NONE"] = FuzzingTarget::kNone;
   fuzzing_target_names["SERIALIZER"] = FuzzingTarget::kSerializer;
   fuzzing_target_names["FIELDPATH"] = FuzzingTarget::kFieldPath;
   fuzzing_target_names["FIRQUERY"] = FuzzingTarget::kFIRQuery;
+  fuzzing_target_names["FIELDVALUE"] = FuzzingTarget::kFieldValue;
 
   const char *fuzzing_target_env = std::getenv("FUZZING_TARGET");
 
@@ -140,9 +143,18 @@ int RunFuzzTestingMain() {
       fuzzer_function = fuzzing::FuzzTestFIRQuery;
       break;
 
+    case FuzzingTarget::kFieldValue:
+      dict_location = fuzzing::GetFieldValueDictionaryLocation(resources_location);
+      corpus_location = fuzzing::GetFieldValueCorpusLocation(resources_location);
+      fuzzer_function = fuzzing::FuzzTestFieldValue;
+      break;
+
     case FuzzingTarget::kNone:
-    default:
       LOG_WARN("Not going to run fuzzing, exiting!");
+      return 0;
+
+    default:
+      LOG_WARN("Unable to fuzz test the selected target!");
       return 0;
   }
 
