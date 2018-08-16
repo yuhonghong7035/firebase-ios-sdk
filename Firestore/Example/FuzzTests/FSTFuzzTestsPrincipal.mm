@@ -22,6 +22,7 @@
 #include "LibFuzzer/FuzzerDefs.h"
 #include "absl/strings/str_join.h"
 
+#include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestCollectionReference.h"
 #include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestFieldPath.h"
 #include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestFieldValue.h"
 #include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestFIRQuery.h"
@@ -37,7 +38,14 @@ namespace fuzzing = firebase::firestore::fuzzing;
 
 // A list of targets to fuzz test. Should be kept in sync with
 // GetFuzzingTarget() fuzzing_target_names map object.
-enum class FuzzingTarget { kNone, kSerializer, kFieldPath, kFIRQuery, kFieldValue };
+enum class FuzzingTarget {
+  kNone,
+  kSerializer,
+  kFieldPath,
+  kFIRQuery,
+  kFieldValue,
+  kCollectionRefernece
+};
 
 // Directory to which crashing inputs are written. Must include the '/' at the
 // end because libFuzzer prepends this path to the crashing input file name.
@@ -48,14 +56,13 @@ NSString *kCrashingInputsDirectory = NSTemporaryDirectory();
 // Default target is kNone if the environment variable is empty, not set, or
 // could not be interpreted. Should be kept in sync with FuzzingTarget.
 FuzzingTarget GetFuzzingTarget() {
-  // TODO(minafarid): remove the hard-coding return.
-  return FuzzingTarget::kFieldValue;
   std::unordered_map<std::string, FuzzingTarget> fuzzing_target_names;
   fuzzing_target_names["NONE"] = FuzzingTarget::kNone;
   fuzzing_target_names["SERIALIZER"] = FuzzingTarget::kSerializer;
   fuzzing_target_names["FIELDPATH"] = FuzzingTarget::kFieldPath;
   fuzzing_target_names["FIRQUERY"] = FuzzingTarget::kFIRQuery;
   fuzzing_target_names["FIELDVALUE"] = FuzzingTarget::kFieldValue;
+  fuzzing_target_names["COLLECTIONREFERENCE"] = FuzzingTarget::kCollectionRefernece;
 
   const char *fuzzing_target_env = std::getenv("FUZZING_TARGET");
 
@@ -147,6 +154,12 @@ int RunFuzzTestingMain() {
       dict_location = fuzzing::GetFieldValueDictionaryLocation(resources_location);
       corpus_location = fuzzing::GetFieldValueCorpusLocation(resources_location);
       fuzzer_function = fuzzing::FuzzTestFieldValue;
+      break;
+
+    case FuzzingTarget::kCollectionRefernece:
+      dict_location = fuzzing::GetCollectionReferenceDictionaryLocation(resources_location);
+      corpus_location = fuzzing::GetCollectionReferenceCorpusLocation(resources_location);
+      fuzzer_function = fuzzing::FuzzTestCollectionReference;
       break;
 
     case FuzzingTarget::kNone:
