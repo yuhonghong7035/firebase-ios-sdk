@@ -22,6 +22,7 @@
 #include "LibFuzzer/FuzzerDefs.h"
 #include "absl/strings/str_join.h"
 
+#include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestBackend.h"
 #include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestCollectionReference.h"
 #include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestFieldPath.h"
 #include "Firestore/Example/FuzzTests/FuzzingTargets/FSTFuzzTestFieldValue.h"
@@ -44,7 +45,8 @@ enum class FuzzingTarget {
   kFieldPath,
   kFIRQuery,
   kFieldValue,
-  kCollectionRefernece
+  kCollectionRefernece,
+  kBackend
 };
 
 // Directory to which crashing inputs are written. Must include the '/' at the
@@ -55,7 +57,7 @@ NSString *kCrashingInputsDirectory = NSTemporaryDirectory();
 // Retrieves the fuzzing target from the FUZZING_TARGET environment variable.
 // Default target is kNone if the environment variable is empty, not set, or
 // could not be interpreted. Should be kept in sync with FuzzingTarget.
-FuzzingTarget GetFuzzingTarget() {
+  FuzzingTarget GetFuzzingTarget() {return FuzzingTarget::kBackend;
   std::unordered_map<std::string, FuzzingTarget> fuzzing_target_names;
   fuzzing_target_names["NONE"] = FuzzingTarget::kNone;
   fuzzing_target_names["SERIALIZER"] = FuzzingTarget::kSerializer;
@@ -63,6 +65,7 @@ FuzzingTarget GetFuzzingTarget() {
   fuzzing_target_names["FIRQUERY"] = FuzzingTarget::kFIRQuery;
   fuzzing_target_names["FIELDVALUE"] = FuzzingTarget::kFieldValue;
   fuzzing_target_names["COLLECTIONREFERENCE"] = FuzzingTarget::kCollectionRefernece;
+  fuzzing_target_names["BACKEND"] = FuzzingTarget::kBackend;
 
   const char *fuzzing_target_env = std::getenv("FUZZING_TARGET");
 
@@ -160,6 +163,12 @@ int RunFuzzTestingMain() {
       dict_location = fuzzing::GetCollectionReferenceDictionaryLocation(resources_location);
       corpus_location = fuzzing::GetCollectionReferenceCorpusLocation(resources_location);
       fuzzer_function = fuzzing::FuzzTestCollectionReference;
+      break;
+
+    case FuzzingTarget::kBackend:
+      dict_location = fuzzing::GetBackendDictionaryLocation(resources_location);
+      corpus_location = fuzzing::GetBackendCorpusLocation(resources_location);
+      fuzzer_function = fuzzing::FuzzTestBackend;
       break;
 
     case FuzzingTarget::kNone:

@@ -167,6 +167,7 @@
 		6E3C04972126027E0085F5E6 /* FSTFuzzTestFIRQuery.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6E3C04962126027E0085F5E6 /* FSTFuzzTestFIRQuery.mm */; };
 		6E3C049B212612CE0085F5E6 /* FSTFuzzTestFieldValue.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6E3C049A212612CE0085F5E6 /* FSTFuzzTestFieldValue.mm */; };
 		6E3C049D212617610085F5E6 /* FSTFuzzTestCollectionReference.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6E3C049C212617610085F5E6 /* FSTFuzzTestCollectionReference.mm */; };
+		6E3C04A12126285C0085F5E6 /* FSTFuzzTestBackend.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6E3C04A02126285C0085F5E6 /* FSTFuzzTestBackend.mm */; };
 		6E59498D20F55BA800ECD9A5 /* FuzzingResources in Resources */ = {isa = PBXBuildFile; fileRef = 6ED6DEA120F5502700FC6076 /* FuzzingResources */; };
 		6E8302E021022309003E1EA3 /* FSTFuzzTestFieldPath.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6E8302DF21022309003E1EA3 /* FSTFuzzTestFieldPath.mm */; };
 		6EA39FDE20FE820E008D461F /* FSTFuzzTestSerializer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6EA39FDD20FE820E008D461F /* FSTFuzzTestSerializer.mm */; };
@@ -472,6 +473,8 @@
 		6E3C049A212612CE0085F5E6 /* FSTFuzzTestFieldValue.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTFuzzTestFieldValue.mm; sourceTree = "<group>"; };
 		6E3C049C212617610085F5E6 /* FSTFuzzTestCollectionReference.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTFuzzTestCollectionReference.mm; sourceTree = "<group>"; };
 		6E3C049E212617780085F5E6 /* FSTFuzzTestCollectionReference.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FSTFuzzTestCollectionReference.h; sourceTree = "<group>"; };
+		6E3C049F212621690085F5E6 /* FSTFuzzTestBackend.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FSTFuzzTestBackend.h; sourceTree = "<group>"; };
+		6E3C04A02126285C0085F5E6 /* FSTFuzzTestBackend.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTFuzzTestBackend.mm; sourceTree = "<group>"; };
 		6E8302DE210222ED003E1EA3 /* FSTFuzzTestFieldPath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FSTFuzzTestFieldPath.h; sourceTree = "<group>"; };
 		6E8302DF21022309003E1EA3 /* FSTFuzzTestFieldPath.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTFuzzTestFieldPath.mm; sourceTree = "<group>"; };
 		6EA39FDD20FE820E008D461F /* FSTFuzzTestSerializer.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTFuzzTestSerializer.mm; sourceTree = "<group>"; };
@@ -975,6 +978,8 @@
 				6E3C049A212612CE0085F5E6 /* FSTFuzzTestFieldValue.mm */,
 				6E3C049C212617610085F5E6 /* FSTFuzzTestCollectionReference.mm */,
 				6E3C049E212617780085F5E6 /* FSTFuzzTestCollectionReference.h */,
+				6E3C049F212621690085F5E6 /* FSTFuzzTestBackend.h */,
+				6E3C04A02126285C0085F5E6 /* FSTFuzzTestBackend.mm */,
 			);
 			path = FuzzingTargets;
 			sourceTree = "<group>";
@@ -1942,6 +1947,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6E3C04A12126285C0085F5E6 /* FSTFuzzTestBackend.mm in Sources */,
 				6E3C049D212617610085F5E6 /* FSTFuzzTestCollectionReference.mm in Sources */,
 				6E8302E021022309003E1EA3 /* FSTFuzzTestFieldPath.mm in Sources */,
 				6EA39FDE20FE820E008D461F /* FSTFuzzTestSerializer.mm in Sources */,
