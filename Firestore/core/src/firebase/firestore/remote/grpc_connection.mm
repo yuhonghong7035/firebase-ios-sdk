@@ -16,10 +16,13 @@
 
 #include "Firestore/core/src/firebase/firestore/remote/grpc_connection.h"
 
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <utility>
 
 #include "Firestore/core/include/firebase/firestore/firestore_errors.h"
+#include "Firestore/core/src/firebase/firestore/auth/token.h"
 #include "Firestore/core/src/firebase/firestore/model/database_id.h"
 #include "Firestore/core/src/firebase/firestore/util/hard_assert.h"
 #include "Firestore/core/src/firebase/firestore/util/log.h"
@@ -33,6 +36,7 @@ namespace firebase {
 namespace firestore {
 namespace remote {
 
+using auth::Token;
 using core::DatabaseInfo;
 using model::DatabaseId;
 using util::StringFormat;
@@ -48,6 +52,8 @@ std::string MakeString(absl::string_view view) {
 
 }  // namespace
 
+std::string GrpcConnection::test_certificate_path_;
+
 GrpcConnection::GrpcConnection(const DatabaseInfo &database_info,
                                util::AsyncQueue *worker_queue,
                                grpc::CompletionQueue *grpc_queue)
@@ -57,7 +63,11 @@ GrpcConnection::GrpcConnection(const DatabaseInfo &database_info,
 }
 
 std::unique_ptr<grpc::ClientContext> GrpcConnection::CreateContext(
-    absl::string_view token) const {
+    const Token &credential) const {
+  absl::string_view token = credential.user().is_authenticated()
+                                ? credential.token()
+                                : absl::string_view{};
+
   auto context = absl::make_unique<grpc::ClientContext>();
   if (token.data()) {
     context->set_credentials(grpc::AccessTokenCredentials(MakeString(token)));
@@ -90,16 +100,32 @@ void GrpcConnection::EnsureActiveStub() {
   if (!grpc_channel_ || grpc_channel_->GetState(/*try_to_connect=*/false) ==
                             GRPC_CHANNEL_SHUTDOWN) {
     LOG_DEBUG("Creating Firestore stub.");
-    grpc_channel_ = grpc::CreateChannel(
-        database_info_->host(),
-        grpc::SslCredentials(grpc::SslCredentialsOptions()));
+    grpc_channel_ = CreateChannel();
     grpc_stub_ = absl::make_unique<grpc::GenericStub>(grpc_channel_);
   }
 }
 
+std::shared_ptr<grpc::Channel> GrpcConnection::CreateChannel() const {
+  if (test_certificate_path_.empty()) {
+    return grpc::CreateChannel(
+        database_info_->host(),
+        grpc::SslCredentials(grpc::SslCredentialsOptions()));
+  }
+
+  std::fstream cert_file{test_certificate_path_};
+  std::stringstream cert_buffer;
+  cert_buffer << cert_file.rdbuf();
+  grpc::SslCredentialsOptions options;
+  options.pem_root_certs = cert_buffer.str();
+  grpc::ChannelArguments args;
+  args.SetSslTargetNameOverride("test_cert_2");
+  return grpc::CreateCustomChannel(database_info_->host(),
+                                   grpc::SslCredentials(options), args);
+}
+
 std::unique_ptr<GrpcStream> GrpcConnection::CreateStream(
     absl::string_view rpc_name,
-    absl::string_view token,
+    const Token &token,
     GrpcStreamObserver *observer) {
   LOG_DEBUG("Creating gRPC stream");
 
@@ -110,6 +136,36 @@ std::unique_ptr<GrpcStream> GrpcConnection::CreateStream(
       grpc_stub_->PrepareCall(context.get(), MakeString(rpc_name), grpc_queue_);
   return absl::make_unique<GrpcStream>(std::move(context), std::move(call),
                                        observer, worker_queue_);
+}
+
+std::unique_ptr<GrpcUnaryCall> GrpcConnection::CreateUnaryCall(
+    absl::string_view rpc_name,
+    const Token &token,
+    const grpc::ByteBuffer &message) {
+  LOG_DEBUG("Creating gRPC unary call");
+
+  EnsureActiveStub();
+
+  auto context = CreateContext(token);
+  auto call = grpc_stub_->PrepareUnaryCall(context.get(), MakeString(rpc_name),
+                                           message, grpc_queue_);
+  return absl::make_unique<GrpcUnaryCall>(std::move(context), std::move(call),
+                                          worker_queue_, message);
+}
+
+std::unique_ptr<GrpcStreamingReader> GrpcConnection::CreateStreamingReader(
+    absl::string_view rpc_name,
+    const Token &token,
+    const grpc::ByteBuffer &message) {
+  LOG_DEBUG("Creating gRPC streaming reader");
+
+  EnsureActiveStub();
+
+  auto context = CreateContext(token);
+  auto call =
+      grpc_stub_->PrepareCall(context.get(), MakeString(rpc_name), grpc_queue_);
+  return absl::make_unique<GrpcStreamingReader>(
+      std::move(context), std::move(call), worker_queue_, message);
 }
 
 }  // namespace remote
