@@ -92,6 +92,10 @@ class WriteStream : public Stream {
   /** Sends a group of mutations to the Firestore backend to apply. */
   void WriteMutations(NSArray<FSTMutation*>* mutations);
 
+ protected:
+  // For tests only
+  void SetHandshakeComplete() { handshake_complete_ = true; }
+
  private:
   std::unique_ptr<GrpcStream> CreateGrpcStream(
       GrpcConnection* grpc_connection, const auth::Token& token) override;

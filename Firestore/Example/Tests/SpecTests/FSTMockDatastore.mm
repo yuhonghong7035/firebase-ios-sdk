@@ -104,6 +104,7 @@ class MockWatchStream : public WatchStream {
     if (![change isKindOfClass:[FSTWatchTargetChange class]]) {
       return;
     }
+
     FSTWatchTargetChange *targetChange = (FSTWatchTargetChange *)change;
     if (!targetChange.cause) {
       return;
@@ -151,13 +152,10 @@ class MockWriteStream : public WriteStream {
   }
 
   void Start() override {
-    HARD_ASSERT(!open_, "Trying to start already started watch stream");
+    HARD_ASSERT(!open_, "Trying to start already started write stream");
     open_ = true;
-    [self.delegate watchStreamDidOpen];
-  }
-
-  void Stop() override {
-    active_targets_.clear();
+    sent_mutations_.clear();
+    [self.delegate writeStreamDidOpen];
   }
 
   bool IsStarted() const override {
@@ -167,61 +165,50 @@ class MockWriteStream : public WriteStream {
     return open_;
   }
 
-//- (void)startWithDelegate:(id<FSTWriteStreamDelegate>)delegate {
-//  HARD_ASSERT(!self.open, "Trying to start already started write stream");
-//  self.open = YES;
-//  [self.sentMutations removeAllObjects];
-//  self.delegate = delegate;
-//  [self notifyStreamOpen];
-//}
-//
-//
-//- (void)writeHandshake {
-//  self.datastore.writeStreamRequestCount += 1;
-//  [self setHandshakeComplete];
-//  [self.delegate writeStreamDidCompleteHandshake];
-//}
-//
-//- (void)writeMutations:(NSArray<FSTMutation *> *)mutations {
-//  self.datastore.writeStreamRequestCount += 1;
-//  [self.sentMutations addObject:mutations];
-//}
-//
-//#pragma mark - Helper methods.
-//
-///** Injects a write ack as though it had come from the backend in response to a write. */
-//- (void)ackWriteWithVersion:(const SnapshotVersion &)commitVersion
-//            mutationResults:(NSArray<FSTMutationResult *> *)results {
-//  [self.delegate writeStreamDidReceiveResponseWithVersion:commitVersion mutationResults:results];
-//}
-//
-///** Injects a failed write response as though it had come from the backend. */
-//- (void)failStreamWithError:(NSError *)error {
-//  self.open = NO;
-//  [self notifyStreamInterruptedWithError:error];
-//}
-//
-///**
-// * Returns the next write that was "sent to the backend", failing if there are no queued sent
-// */
-//- (NSArray<FSTMutation *> *)nextSentWrite {
-//  HARD_ASSERT(self.sentMutations.count > 0,
-//              "Writes need to happen before you can call nextSentWrite.");
-//  NSArray<FSTMutation *> *result = [self.sentMutations objectAtIndex:0];
-//  [self.sentMutations removeObjectAtIndex:0];
-//  return result;
-//}
-//
-///**
-// * Returns the number of mutations that have been sent to the backend but not retrieved via
-// * nextSentWrite yet.
-// */
-//- (int)sentMutationsCount {
-//  return (int)self.sentMutations.count;
-//}
+  void WriteHandshake() {
+    datastore_->IncrementWriteStreamRequestCount();
+    SetHandshakeComplete();
+    [self.delegate writeStreamDidCompleteHandshake];
+}
+
+  void WriteMutations(NSArray<FSTMutation*>* mutations) {
+    datastore_->IncrementWriteStreamRequestCount();
+    sent_mutations_.push(mutations);
+}
+
+/** Injects a write ack as though it had come from the backend in response to a write. */
+void AckWrite(const SnapshotVersion& commitVersion, NSArray<FSTMutationResult *>* results ) {
+  [self.delegate writeStreamDidReceiveResponseWithVersion:commitVersion mutationResults:results];
+}
+
+/** Injects a failed write response as though it had come from the backend. */
+  void FailStreamWithError(NSError *error) {
+    open_ = false;
+    [self.delegate writeStreamWasInterruptedWithError:error];
+  }
+
+/**
+ * Returns the next write that was "sent to the backend", failing if there are no queued sent
+ */
+std::vector<FSTMutation *> NextSentWrite() {
+  HARD_ASSERT(!sent_mutations_.empty(),
+              "Writes need to happen before you can call NextSentWrite.");
+  std::vector<FSTMutation *> result = std::move(sent_mutations_.front());
+  sent_mutations_.pop();
+  return result;
+}
+
+  /**
+  * Returns the number of mutations that have been sent to the backend but not retrieved via
+  * nextSentWrite yet.
+  */
+  int SentMutationsCount() const {
+    return static_cast<int>(sent_mutations_.size());
+}
+
  private:
   bool open_ = false;
-//@property(nonatomic, strong, readonly) NSMutableArray<NSArray<FSTMutation *> *> *sentMutations;
+  std::queue<std::vector<FSTMutation*>> sent_mutations_;
   MockDatastore *datastore_ = nullptr;
   id<FSTWriteStreamDelegate> delegate_ = nullptr;
 };
@@ -229,8 +216,6 @@ class MockWriteStream : public WriteStream {
 }  // namespace remote
 }  // namespace firestore
 }  // namespace firebase
-
-#pragma mark - FSTMockDatastore
 
 @interface FSTMockDatastore ()
 //@property(nonatomic, strong, nullable) FSTMockWatchStream *watchStream;
@@ -246,25 +231,33 @@ class MockWriteStream : public WriteStream {
 
 #pragma mark - Overridden FSTDatastore methods.
 
-// - (FSTWatchStream *)createWatchStream {
-//   self.watchStream = [[FSTMockWatchStream alloc]
-//         initWithDatastore:self
-//       workerDispatchQueue:self.workerDispatchQueue
-//               credentials:self.credentials
-//                serializer:[[FSTSerializerBeta alloc]
-//                               initWithDatabaseID:&self.databaseInfo->database_id()]];
-//   return self.watchStream;
-// }
+{
+  self.writeStream = [[FSTMockWriteStream alloc]
+        initWithDatastore:self
+      workerDispatchQueue:self.workerDispatchQueue
+              credentials:self.credentials
+               serializer:[[FSTSerializerBeta alloc]
+                              initWithDatabaseID:&self.databaseInfo->database_id()]];
+  return self.writeStream;
+}
 
-// - (FSTWriteStream *)createWriteStream {
-//   self.writeStream = [[FSTMockWriteStream alloc]
-//         initWithDatastore:self
-//       workerDispatchQueue:self.workerDispatchQueue
-//               credentials:self.credentials
-//                serializer:[[FSTSerializerBeta alloc]
-//                               initWithDatabaseID:&self.databaseInfo->database_id()]];
-//   return self.writeStream;
-// }
+- (FSTWatchStream *)createWatchStream {
+  self.watchStream = [[FSTMockWatchStream alloc]
+        initWithDatastore:self
+      workerDispatchQueue:self.workerDispatchQueue
+              credentials:self.credentials
+               serializer:[[FSTSerializerBeta alloc]
+                              initWithDatabaseID:&self.databaseInfo->database_id()]];
+  return self.watchStream;
+}
+
+- (FSTWatchStream *)createWatchStream {
+  return datastore_->CreateWatchStream();
+}
+
+- (FSTWriteStream *)createWriteStream {
+  return datastore_->CreateWriteStream();
+}
 
 - (void)authorizeAndStartRPC:(GRPCProtoCall *)rpc completion:(FSTVoidErrorBlock)completion {
   HARD_FAIL("FSTMockDatastore shouldn't be starting any RPCs.");
@@ -272,41 +265,37 @@ class MockWriteStream : public WriteStream {
 
 #pragma mark - Method exposed for tests to call.
 
-- (NSArray<FSTMutation *> *)nextSentWrite {
-  return @[];
-  // return [self.writeStream nextSentWrite];
+- (std::vector<FSTMutation > *)nextSentWrite {
+  return _writeStream->NextSentWrite();
 }
 
 - (int)writesSent {
-  return 0;
-  // return [self.writeStream sentMutationsCount];
+  return _writeStream->SentMutationsCount();
 }
 
-- (void)ackWriteWithVersion:(const SnapshotVersion &)commitVersion
+- (void)ackWriteWithVersion:(const SnapshotVersion &)version
             mutationResults:(NSArray<FSTMutationResult *> *)results {
-  // [self.writeStream ackWriteWithVersion:commitVersion mutationResults:results];
+  _writeStream->AckWrite(version, results);
 }
 
 - (void)failWriteWithError:(NSError *_Nullable)error {
-  // [self.writeStream failStreamWithError:error];
+  _watchStream->FailStreamWithError(error);
 }
 
 - (void)writeWatchChange:(FSTWatchChange *)change snapshotVersion:(const SnapshotVersion &)snap {
-  // [self.watchStream writeWatchChange:change snapshotVersion:snap];
+  _watchStream->WriteWatchChange(change, snap);
 }
 
 - (void)failWatchStreamWithError:(NSError *)error {
-  // [self.watchStream failStreamWithError:error];
+  _watchStream->FailStreamWithError(error);
 }
 
-- (NSDictionary<FSTBoxedTargetID *, FSTQueryData *> *)activeTargets {
-  return @{};
-  // return [self.watchStream.activeTargets copy];
+- (std::map<TargetId *, FSTQueryData *> )activeTargets {
+  return _watchStream->ActiveTargets();
 }
 
 - (BOOL)isWatchStreamOpen {
-  return NO;
-  // return self.watchStream.isOpen;
+  return _watchStream->IsOpen();
 }
 
 @end
