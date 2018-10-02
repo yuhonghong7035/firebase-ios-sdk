@@ -48,187 +48,125 @@ namespace firebase {
 namespace firestore {
 namespace remote {
 
+using model::TargetId;
+
 class MockWatchStream : public WatchStream {
-  public:
-  private:
+ public:
+  MockWatchStream(AsyncQueue *worker_queue,
+                  CredentialsProvider *credentials_provider,
+                  FSTSerializerBeta *serializer,
+                  GrpcConnection *grpc_connection,
+                  id<FSTWatchStreamDelegate> delegate,
+                  MockDatastore *datastore)
+      : WatchStream{async_queue, credentials_provider, serializer, grpc_connection, delegate},
+        datastore_{datastore},
+        delegate_{delegate} {
+  }
+
+  void Start() override {
+    HARD_ASSERT(!open_, "Trying to start already started watch stream");
+    open_ = true;
+    [self.delegate watchStreamDidOpen];
+  }
+
+  void Stop() override {
+    active_targets_.clear();
+  }
+
+  bool IsStarted() const override {
+    return open_;
+  }
+  bool IsOpen() const override {
+    return open_;
+  }
+
+  void WatchQuery(FSTQueryData *query) override {
+    LOG_DEBUG("WatchQuery: %s: %s", query.targetID, query.query);
+    datastore_->IncrementWatchStreamRequestsCount();
+    // Snapshot version is ignored on the wire
+    FSTQueryData *sentQueryData = [query queryDataByReplacingSnapshotVersion:SnapshotVersion::None()
+                                                                 resumeToken:query.resumeToken
+                                                              sequenceNumber:query.sequenceNumber];
+    active_targets_[query.targetID] = sentQueryData;
+  }
+
+  void UnwatchTargetId(model::TargetId target_id) override {
+    LOG_DEBUG("UnwatchTargetId: %s", target_id);
+    active_targets_.erase(active_targets_.find(target_id));
+  }
+
+  void FailStreamWithError(NSError *error) {
+    open_ = false;
+    [self.delegate watchStreamWasInterruptedWithError:error];
+  }
+
+  void WriteWatchChange(FSTWatchChange *change, SnapshotVersion snap) {
+    if (![change isKindOfClass:[FSTWatchTargetChange class]]) {
+      return;
+    }
+    FSTWatchTargetChange *targetChange = (FSTWatchTargetChange *)change;
+    if (!targetChange.cause) {
+      return;
+    }
+
+    for (NSNumber *targetID in targetChange.targetIDs) {
+      auto found = active_targets_.find(target_id);
+      if (found == active_targets_.end()) {
+        // Technically removing an unknown target is valid (e.g. it could race with a
+        // server-side removal), but we want to pay extra careful attention in tests
+        // that we only remove targets we listened to.
+        HARD_FAIL("Removing a non-active target");
+      }
+
+      active_targets_.erase(found);
+    }
+
+    if ([targetChange.targetIDs count] != 0) {
+      // If the list of target IDs is not empty, we reset the snapshot version to NONE as
+      // done in `FSTSerializerBeta.versionFromListenResponse:`.
+      snap = SnapshotVersion::None();
+    }
+
+    [self.delegate watchStreamDidChange:change snapshotVersion:snap];
+  }
+
+ private:
+  bool open_ = false;
+  std::map<TargetId, FSTQueryData *> active_targets_;
+  MockDatastore *datastore_ = nullptr;
+  id<FSTWatchStreamDelegate> delegate_ = nullptr;
 };
 
-}}}
+class MockWriteStream : public WriteStream {
+ public:
+  MockWriteStream(AsyncQueue *worker_queue,
+                  CredentialsProvider *credentials_provider,
+                  FSTSerializerBeta *serializer,
+                  GrpcConnection *grpc_connection,
+                  id<FSTWatchStreamDelegate> delegate,
+                  MockDatastore *datastore)
+      : WatchStream{async_queue, credentials_provider, serializer, grpc_connection, delegate},
+        datastore_{datastore},
+        delegate_{delegate} {
+  }
 
-//@interface FSTMockWatchStream : FSTWatchStream
-//
-//- (instancetype)initWithDatastore:(FSTMockDatastore *)datastore
-//              workerDispatchQueue:(FSTDispatchQueue *)workerDispatchQueue
-//                      credentials:(CredentialsProvider *)credentials
-//                       serializer:(FSTSerializerBeta *)serializer NS_DESIGNATED_INITIALIZER;
-//
-//- (instancetype)initWithDatabase:(const DatabaseInfo *)database
-//             workerDispatchQueue:(FSTDispatchQueue *)workerDispatchQueue
-//                     credentials:(CredentialsProvider *)credentials
-//                      serializer:(FSTSerializerBeta *)serializer NS_UNAVAILABLE;
-//
-//- (instancetype)initWithDatabase:(const DatabaseInfo *)database
-//             workerDispatchQueue:(FSTDispatchQueue *)workerDispatchQueue
-//                     credentials:(CredentialsProvider *)credentials
-//            responseMessageClass:(Class)responseMessageClass NS_UNAVAILABLE;
-//
-//@property(nonatomic, assign) BOOL open;
-//@property(nonatomic, strong, readonly) FSTMockDatastore *datastore;
-//@property(nonatomic, strong, readonly)
-//    NSMutableDictionary<FSTBoxedTargetID *, FSTQueryData *> *activeTargets;
-//@property(nonatomic, weak, readwrite, nullable) id<FSTWatchStreamDelegate> delegate;
-//
-//@end
-//
-//@implementation FSTMockWatchStream
-//
-//- (instancetype)initWithDatastore:(FSTMockDatastore *)datastore
-//              workerDispatchQueue:(FSTDispatchQueue *)workerDispatchQueue
-//                      credentials:(CredentialsProvider *)credentials
-//                       serializer:(FSTSerializerBeta *)serializer {
-//  self = [super initWithDatabase:datastore.databaseInfo
-//             workerDispatchQueue:workerDispatchQueue
-//                     credentials:credentials
-//                      serializer:serializer];
-//  if (self) {
-//    HARD_ASSERT(datastore, "Datastore must not be nil");
-//    _datastore = datastore;
-//    _activeTargets = [NSMutableDictionary dictionary];
-//  }
-//  return self;
-//}
-//
-//#pragma mark - Overridden FSTWatchStream methods.
-//
-//- (void)startWithDelegate:(id<FSTWatchStreamDelegate>)delegate {
-//  HARD_ASSERT(!self.open, "Trying to start already started watch stream");
-//  self.open = YES;
-//  self.delegate = delegate;
-//  [self notifyStreamOpen];
-//}
-//
-//- (void)stop {
-//  [self.activeTargets removeAllObjects];
-//  self.delegate = nil;
-//}
-//
-//- (BOOL)isOpen {
-//  return self.open;
-//}
-//
-//- (BOOL)isStarted {
-//  return self.open;
-//}
-//
-//- (void)notifyStreamOpen {
-//  [self.delegate watchStreamDidOpen];
-//}
-//
-//- (void)notifyStreamInterruptedWithError:(nullable NSError *)error {
-//  [self.delegate watchStreamWasInterruptedWithError:error];
-//}
-//
-//- (void)watchQuery:(FSTQueryData *)query {
-//  LOG_DEBUG("watchQuery: %s: %s", query.targetID, query.query);
-//  self.datastore.watchStreamRequestCount += 1;
-//  // Snapshot version is ignored on the wire
-//  FSTQueryData *sentQueryData = [query queryDataByReplacingSnapshotVersion:SnapshotVersion::None()
-//                                                               resumeToken:query.resumeToken
-//                                                            sequenceNumber:query.sequenceNumber];
-//  self.activeTargets[@(query.targetID)] = sentQueryData;
-//}
-//
-//- (void)unwatchTargetID:(FSTTargetID)targetID {
-//  LOG_DEBUG("unwatchTargetID: %s", targetID);
-//  [self.activeTargets removeObjectForKey:@(targetID)];
-//}
-//
-//- (void)failStreamWithError:(NSError *)error {
-//  self.open = NO;
-//  [self notifyStreamInterruptedWithError:error];
-//}
-//
-//#pragma mark - Helper methods.
-//
-//- (void)writeWatchChange:(FSTWatchChange *)change snapshotVersion:(SnapshotVersion)snap {
-//  if ([change isKindOfClass:[FSTWatchTargetChange class]]) {
-//    FSTWatchTargetChange *targetChange = (FSTWatchTargetChange *)change;
-//    if (targetChange.cause) {
-//      for (NSNumber *targetID in targetChange.targetIDs) {
-//        if (!self.activeTargets[targetID]) {
-//          // Technically removing an unknown target is valid (e.g. it could race with a
-//          // server-side removal), but we want to pay extra careful attention in tests
-//          // that we only remove targets we listened too.
-//          HARD_FAIL("Removing a non-active target");
-//        }
-//        [self.activeTargets removeObjectForKey:targetID];
-//      }
-//    }
-//    if ([targetChange.targetIDs count] != 0) {
-//      // If the list of target IDs is not empty, we reset the snapshot version to NONE as
-//      // done in `FSTSerializerBeta.versionFromListenResponse:`.
-//      snap = SnapshotVersion::None();
-//    }
-//  }
-//  [self.delegate watchStreamDidChange:change snapshotVersion:snap];
-//}
-//
-//@end
-//
-//#pragma mark - FSTMockWriteStream
-//
-//@interface FSTWriteStream ()
-//
-//@property(nonatomic, weak, readwrite, nullable) id<FSTWriteStreamDelegate> delegate;
-//
-//- (void)notifyStreamOpen;
-//- (void)notifyStreamInterruptedWithError:(nullable NSError *)error;
-//
-//@end
-//
-//@interface FSTMockWriteStream : FSTWriteStream
-//
-//- (instancetype)initWithDatastore:(FSTMockDatastore *)datastore
-//              workerDispatchQueue:(FSTDispatchQueue *)workerDispatchQueue
-//                      credentials:(CredentialsProvider *)credentials
-//                       serializer:(FSTSerializerBeta *)serializer NS_DESIGNATED_INITIALIZER;
-//
-//- (instancetype)initWithDatabase:(const DatabaseInfo *)database
-//             workerDispatchQueue:(FSTDispatchQueue *)workerDispatchQueue
-//                     credentials:(CredentialsProvider *)credentials
-//                      serializer:(FSTSerializerBeta *)serializer NS_UNAVAILABLE;
-//
-//- (instancetype)initWithDatabase:(const DatabaseInfo *)database
-//             workerDispatchQueue:(FSTDispatchQueue *)workerDispatchQueue
-//                     credentials:(CredentialsProvider *)credentials
-//            responseMessageClass:(Class)responseMessageClass NS_UNAVAILABLE;
-//
-//@property(nonatomic, strong, readonly) FSTMockDatastore *datastore;
-//@property(nonatomic, assign) BOOL open;
-//@property(nonatomic, strong, readonly) NSMutableArray<NSArray<FSTMutation *> *> *sentMutations;
-//
-//@end
-//
-//@implementation FSTMockWriteStream
-//
-//- (instancetype)initWithDatastore:(FSTMockDatastore *)datastore
-//              workerDispatchQueue:(FSTDispatchQueue *)workerDispatchQueue
-//                      credentials:(CredentialsProvider *)credentials
-//                       serializer:(FSTSerializerBeta *)serializer {
-//  self = [super initWithDatabase:datastore.databaseInfo
-//             workerDispatchQueue:workerDispatchQueue
-//                     credentials:credentials
-//                      serializer:serializer];
-//  if (self) {
-//    HARD_ASSERT(datastore, "Datastore must not be nil");
-//    _datastore = datastore;
-//    _sentMutations = [NSMutableArray array];
-//  }
-//  return self;
-//}
-//
-//#pragma mark - Overridden FSTWriteStream methods.
-//
+  void Start() override {
+    HARD_ASSERT(!open_, "Trying to start already started watch stream");
+    open_ = true;
+    [self.delegate watchStreamDidOpen];
+  }
+
+  void Stop() override {
+    active_targets_.clear();
+  }
+
+  bool IsStarted() const override {
+    return open_;
+  }
+  bool IsOpen() const override {
+    return open_;
+  }
+
 //- (void)startWithDelegate:(id<FSTWriteStreamDelegate>)delegate {
 //  HARD_ASSERT(!self.open, "Trying to start already started write stream");
 //  self.open = YES;
@@ -237,13 +175,6 @@ class MockWatchStream : public WatchStream {
 //  [self notifyStreamOpen];
 //}
 //
-//- (BOOL)isOpen {
-//  return self.open;
-//}
-//
-//- (BOOL)isStarted {
-//  return self.open;
-//}
 //
 //- (void)writeHandshake {
 //  self.datastore.writeStreamRequestCount += 1;
@@ -288,9 +219,16 @@ class MockWatchStream : public WatchStream {
 //- (int)sentMutationsCount {
 //  return (int)self.sentMutations.count;
 //}
-//
-//
-//@end
+ private:
+  bool open_ = false;
+//@property(nonatomic, strong, readonly) NSMutableArray<NSArray<FSTMutation *> *> *sentMutations;
+  MockDatastore *datastore_ = nullptr;
+  id<FSTWriteStreamDelegate> delegate_ = nullptr;
+};
+
+}  // namespace remote
+}  // namespace firestore
+}  // namespace firebase
 
 #pragma mark - FSTMockDatastore
 
