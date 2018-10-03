@@ -56,7 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)failWatchStreamWithError:(NSError *)error;
 
 /** Returns the set of active targets on the watch stream. */
-- (std::map<firebase::firestore::model::TargetId *, FSTQueryData *> )activeTargets;
+- (NSDictionary<FSTBoxedTargetID*, FSTQueryData *>* )activeTargets;
 
 /** Helper method to expose watch stream state to verify in tests. */
 - (BOOL)isWatchStreamOpen;
@@ -66,7 +66,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Returns the next write that was "sent to the backend", failing if there are no queued sent
  */
-- (std::vector<FSTMutation *> )nextSentWrite;
+- (NSArray<FSTMutation *>* )nextSentWrite;
 
 /** Returns the number of writes that have been sent to the backend but not waited on yet. */
 - (int)writesSent;
