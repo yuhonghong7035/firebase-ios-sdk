@@ -113,13 +113,12 @@ class MockWatchStream : public WatchStream {
 
   void UnwatchTargetId(model::TargetId target_id) override {
     LOG_DEBUG("UnwatchTargetId: %s", target_id);
-    [active_targets_ removeObjectForKey: @(target_id)];
+    [active_targets_ removeObjectForKey:@(target_id)];
   }
 
-  NSDictionary<FSTBoxedTargetID*, FSTQueryData *>* ActiveTargets() {
+  NSDictionary<FSTBoxedTargetID *, FSTQueryData *> *ActiveTargets() {
     return [active_targets_ copy];
   }
-
 
   void FailStreamWithError(NSError *error) {
     open_ = false;
@@ -127,30 +126,26 @@ class MockWatchStream : public WatchStream {
   }
 
   void WriteWatchChange(FSTWatchChange *change, SnapshotVersion snap) {
-    if (![change isKindOfClass:[FSTWatchTargetChange class]]) {
-      return;
-    }
+    if ([change isKindOfClass:[FSTWatchTargetChange class]]) {
+      FSTWatchTargetChange *targetChange = (FSTWatchTargetChange *)change;
+      if (targetChange.cause) {
+        for (NSNumber *targetID in targetChange.targetIDs) {
+          if (!active_targets_[targetID]) {
+            // Technically removing an unknown target is valid (e.g. it could race with a
+            // server-side removal), but we want to pay extra careful attention in tests
+            // that we only remove targets we listened to.
+            HARD_FAIL("Removing a non-active target");
+          }
 
-    FSTWatchTargetChange *targetChange = (FSTWatchTargetChange *)change;
-    if (!targetChange.cause) {
-      return;
-    }
-
-    for (NSNumber *targetID in targetChange.targetIDs) {
-      if (!active_targets_[targetID]) {
-        // Technically removing an unknown target is valid (e.g. it could race with a
-        // server-side removal), but we want to pay extra careful attention in tests
-        // that we only remove targets we listened to.
-        HARD_FAIL("Removing a non-active target");
+          [active_targets_ removeObjectForKey:targetID];
+        }
       }
 
-      [active_targets_ removeObjectForKey:targetID];
-    }
-
-    if ([targetChange.targetIDs count] != 0) {
-      // If the list of target IDs is not empty, we reset the snapshot version to NONE as
-      // done in `FSTSerializerBeta.versionFromListenResponse:`.
-      snap = SnapshotVersion::None();
+      if ([targetChange.targetIDs count] != 0) {
+        // If the list of target IDs is not empty, we reset the snapshot version to NONE as
+        // done in `FSTSerializerBeta.versionFromListenResponse:`.
+        snap = SnapshotVersion::None();
+      }
     }
 
     [delegate_ watchStreamDidChange:change snapshotVersion:snap];
@@ -158,7 +153,7 @@ class MockWatchStream : public WatchStream {
 
  private:
   bool open_ = false;
-  NSMutableDictionary<FSTBoxedTargetID*, FSTQueryData *>* active_targets_;
+  NSMutableDictionary<FSTBoxedTargetID *, FSTQueryData *> *active_targets_;
   FSTMockDatastore *datastore_ = nullptr;
   id<FSTWatchStreamDelegate> delegate_ = nullptr;
 };
@@ -190,13 +185,13 @@ class MockWriteStream : public WriteStream {
     return open_;
   }
 
-  void WriteHandshake() {
+  void WriteHandshake() override {
     datastore_.writeStreamRequestCount += 1;
     SetHandshakeComplete();
     [delegate_ writeStreamDidCompleteHandshake];
   }
 
-  void WriteMutations(NSArray<FSTMutation *> *mutations) {
+  void WriteMutations(NSArray<FSTMutation *> *mutations) override {
     datastore_.writeStreamRequestCount += 1;
     sent_mutations_.push(mutations);
   }
@@ -215,10 +210,10 @@ class MockWriteStream : public WriteStream {
   /**
    * Returns the next write that was "sent to the backend", failing if there are no queued sent
    */
-  NSArray<FSTMutation *>* NextSentWrite() {
+  NSArray<FSTMutation *> *NextSentWrite() {
     HARD_ASSERT(!sent_mutations_.empty(),
                 "Writes need to happen before you can call NextSentWrite.");
-    NSArray<FSTMutation *>* result = std::move(sent_mutations_.front());
+    NSArray<FSTMutation *> *result = std::move(sent_mutations_.front());
     sent_mutations_.pop();
     return result;
   }
@@ -233,7 +228,7 @@ class MockWriteStream : public WriteStream {
 
  private:
   bool open_ = false;
-  std::queue<NSArray<FSTMutation *>*> sent_mutations_;
+  std::queue<NSArray<FSTMutation *> *> sent_mutations_;
   FSTMockDatastore *datastore_ = nullptr;
   id<FSTWriteStreamDelegate> delegate_ = nullptr;
 };
@@ -264,9 +259,13 @@ class MockWriteStream : public WriteStream {
   if (self = [super initWithDatabaseInfo:databaseInfo
                      workerDispatchQueue:workerDispatchQueue
                              credentials:credentials]) {
-    auto connectivityMonitor = absl::make_unique<firebase::firestore::remote::MockConnectivityMonitor>();
+    _workerDispatchQueue = workerDispatchQueue;
+    _credentials = credentials;
+    auto connectivityMonitor =
+        absl::make_unique<firebase::firestore::remote::MockConnectivityMonitor>();
     _grpcConnection = absl::make_unique<firebase::firestore::remote::GrpcConnection>(
-        *databaseInfo, [workerDispatchQueue implementation], nullptr, std::move(connectivityMonitor));
+        *databaseInfo, [workerDispatchQueue implementation], nullptr,
+        std::move(connectivityMonitor));
   }
   return self;
 }
@@ -297,7 +296,7 @@ class MockWriteStream : public WriteStream {
 
 #pragma mark - Method exposed for tests to call.
 
-- (NSArray<FSTMutation*>* )nextSentWrite {
+- (NSArray<FSTMutation *> *)nextSentWrite {
   return _writeStream->NextSentWrite();
 }
 
@@ -322,7 +321,7 @@ class MockWriteStream : public WriteStream {
   _watchStream->FailStreamWithError(error);
 }
 
-- (NSDictionary<FSTBoxedTargetID*, FSTQueryData *>*)activeTargets {
+- (NSDictionary<FSTBoxedTargetID *, FSTQueryData *> *)activeTargets {
   return _watchStream->ActiveTargets();
 }
 

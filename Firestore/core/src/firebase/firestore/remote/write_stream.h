@@ -87,14 +87,17 @@ class WriteStream : public Stream {
    * Sends an initial stream token to the server, performing the handshake
    * required to make the StreamingWrite RPC work.
    */
-  void WriteHandshake();
+  virtual /*only virtual for tests*/ void WriteHandshake();
 
   /** Sends a group of mutations to the Firestore backend to apply. */
-  void WriteMutations(NSArray<FSTMutation*>* mutations);
+  virtual /*only virtual for tests*/ void WriteMutations(
+      NSArray<FSTMutation*>* mutations);
 
  protected:
   // For tests only
-  void SetHandshakeComplete() { handshake_complete_ = true; }
+  void SetHandshakeComplete() {
+    handshake_complete_ = true;
+  }
 
  private:
   std::unique_ptr<GrpcStream> CreateGrpcStream(
