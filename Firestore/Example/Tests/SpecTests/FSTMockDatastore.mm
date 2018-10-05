@@ -84,6 +84,10 @@ class MockWatchStream : public WatchStream {
     active_targets_ = [NSMutableDictionary dictionary];
   }
 
+  NSDictionary<FSTBoxedTargetID *, FSTQueryData *> *ActiveTargets() {
+    return [active_targets_ copy];
+  }
+
   void Start() override {
     HARD_ASSERT(!open_, "Trying to start already started watch stream");
     open_ = true;
@@ -116,10 +120,6 @@ class MockWatchStream : public WatchStream {
     [active_targets_ removeObjectForKey:@(target_id)];
   }
 
-  NSDictionary<FSTBoxedTargetID *, FSTQueryData *> *ActiveTargets() {
-    return [active_targets_ copy];
-  }
-
   void FailStreamWithError(NSError *error) {
     open_ = false;
     [delegate_ watchStreamWasInterruptedWithError:error];
@@ -129,15 +129,15 @@ class MockWatchStream : public WatchStream {
     if ([change isKindOfClass:[FSTWatchTargetChange class]]) {
       FSTWatchTargetChange *targetChange = (FSTWatchTargetChange *)change;
       if (targetChange.cause) {
-        for (NSNumber *targetID in targetChange.targetIDs) {
-          if (!active_targets_[targetID]) {
+        for (NSNumber* target_id in targetChange.targetIDs) {
+          if (!active_targets_[target_id]) {
             // Technically removing an unknown target is valid (e.g. it could race with a
             // server-side removal), but we want to pay extra careful attention in tests
             // that we only remove targets we listened to.
             HARD_FAIL("Removing a non-active target");
           }
 
-          [active_targets_ removeObjectForKey:targetID];
+          [active_targets_ removeObjectForKey:target_id];
         }
       }
 
@@ -153,7 +153,7 @@ class MockWatchStream : public WatchStream {
 
  private:
   bool open_ = false;
-  NSMutableDictionary<FSTBoxedTargetID *, FSTQueryData *> *active_targets_;
+  NSMutableDictionary<FSTBoxedTargetID*, FSTQueryData*>* active_targets_ = nullptr;
   FSTMockDatastore *datastore_ = nullptr;
   id<FSTWatchStreamDelegate> delegate_ = nullptr;
 };
@@ -197,7 +197,7 @@ class MockWriteStream : public WriteStream {
   }
 
   /** Injects a write ack as though it had come from the backend in response to a write. */
-  void AckWrite(const SnapshotVersion &commitVersion, NSArray<FSTMutationResult *> *results) {
+  void AckWrite(const SnapshotVersion& commitVersion, NSArray<FSTMutationResult*>* results) {
     [delegate_ writeStreamDidReceiveResponseWithVersion:commitVersion mutationResults:results];
   }
 
