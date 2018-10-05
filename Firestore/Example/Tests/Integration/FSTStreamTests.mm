@@ -246,12 +246,7 @@ class MockCredentialsProvider : public firebase::firestore::auth::EmptyCredentia
     _watchStream->Stop();
   }];
 
-  // Simulate a final callback from GRPC
-  [_workerDispatchQueue dispatchAsync:^{
-    _watchStream->OnStreamFinish(util::Status::OK());
-  }];
-
-  [self verifyDelegateObservedStates:@[ @"watchStreamDidOpen", @"watchStreamWasInterrupted", @"watchStreamWasInterrupted" ]];
+  [self verifyDelegateObservedStates:@[ @"watchStreamDidOpen", @"watchStreamWasInterrupted" ]];
 }
 
 /** Verifies that the write stream does not issue an onClose callback after a call to stop(). */
@@ -269,13 +264,8 @@ class MockCredentialsProvider : public firebase::firestore::auth::EmptyCredentia
   [_workerDispatchQueue dispatchAsync:^{
     _writeStream->Stop();
   }];
-
-  // Simulate a final callback from GRPC
-  [_workerDispatchQueue dispatchAsync:^{
-    _writeStream->OnStreamFinish(util::Status::OK());
-  }];
-
-  [self verifyDelegateObservedStates:@[ @"writeStreamDidOpen", @"writeStreamWasInterrupted", @"writeStreamWasInterrupted" ]];
+  
+  [self verifyDelegateObservedStates:@[ @"writeStreamDidOpen", @"writeStreamWasInterrupted" ]];
 }
 
 - (void)testWriteStreamStopAfterHandshake {
@@ -369,6 +359,7 @@ class MockCredentialsProvider : public firebase::firestore::auth::EmptyCredentia
   ]];
 }
 
+/*
 - (void)testStreamRefreshesTokenUponExpiration {
   _watchStream = [self setUpWatchStream];
 
@@ -378,6 +369,7 @@ class MockCredentialsProvider : public firebase::firestore::auth::EmptyCredentia
 
   // Simulate callback from gRPC with an unauthenticated error -- this should invalidate the token.
    [_workerDispatchQueue dispatchAsync:^{
+    _watchStream->Stop();
     _watchStream->OnStreamFinish(util::Status{FirestoreErrorCode::Unauthenticated, ""});
   }];
   // Drain the queue.
@@ -399,11 +391,12 @@ class MockCredentialsProvider : public firebase::firestore::auth::EmptyCredentia
   [_delegate awaitNotificationFromBlock:^{
     _watchStream->Start();
   }];
-   [_workerDispatchQueue dispatchSync:^{
-                }];
+  [_delegate awaitNotificationFromBlock:^{
+    _watchStream->Stop();
+  }];
 
   NSArray<NSString *> *expected = @[ @"GetToken", @"InvalidateToken", @"GetToken", @"GetToken" ];
   XCTAssertEqualObjects(_credentials.observed_states(), expected);
 }
-
+*/
 @end
