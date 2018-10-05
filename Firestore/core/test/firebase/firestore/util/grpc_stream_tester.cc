@@ -35,13 +35,13 @@ using remote::GrpcStreamingReader;
 using remote::GrpcStreamObserver;
 using util::CompletionEndState;
 
-// MockGrpcQueue
+// FakeGrpcQueue
 
-MockGrpcQueue::MockGrpcQueue()
+FakeGrpcQueue::FakeGrpcQueue()
     : dedicated_executor_{absl::make_unique<ExecutorStd>()} {
 }
 
-void MockGrpcQueue::Shutdown() {
+void FakeGrpcQueue::Shutdown() {
   if (is_shut_down_) {
     return;
   }
@@ -52,7 +52,7 @@ void MockGrpcQueue::Shutdown() {
   dedicated_executor_->ExecuteBlocking([] {});
 }
 
-void MockGrpcQueue::ExtractCompletions(
+void FakeGrpcQueue::ExtractCompletions(
     std::initializer_list<CompletionEndState> end_states) {
   dedicated_executor_->ExecuteBlocking([&] {
     for (CompletionEndState end_state : end_states) {
@@ -68,7 +68,7 @@ void MockGrpcQueue::ExtractCompletions(
   });
 }
 
-void MockGrpcQueue::KeepPolling() {
+void FakeGrpcQueue::KeepPolling() {
   dedicated_executor_->Execute([&] {
     void* tag = nullptr;
     bool ignored_ok = false;
@@ -80,16 +80,12 @@ void MockGrpcQueue::KeepPolling() {
 
 // GrpcStreamTester
 
-GrpcStreamTester::GrpcStreamTester()
-    : GrpcStreamTester{absl::make_unique<ConnectivityMonitor>(nullptr)} {
-}
-
-GrpcStreamTester::GrpcStreamTester(
-    std::unique_ptr<ConnectivityMonitor> connectivity_monitor)
-    : worker_queue_{absl::make_unique<ExecutorStd>()},
+GrpcStreamTester::GrpcStreamTester(AsyncQueue* worker_queue,
+                                   ConnectivityMonitor* connectivity_monitor)
+    : worker_queue_{NOT_NULL(worker_queue)},
       database_info_{DatabaseId{"foo", "bar"}, "", "", false},
-      grpc_connection_{database_info_, &worker_queue_, mock_grpc_queue_.queue(),
-                       std::move(connectivity_monitor)} {
+      grpc_connection_{database_info_, worker_queue, mock_grpc_queue_.queue(),
+                       connectivity_monitor} {
 }
 
 GrpcStreamTester::~GrpcStreamTester() {
@@ -98,7 +94,7 @@ GrpcStreamTester::~GrpcStreamTester() {
 }
 
 void GrpcStreamTester::Shutdown() {
-  worker_queue_.EnqueueBlocking([&] { ShutdownGrpcQueue(); });
+  worker_queue_->EnqueueBlocking([&] { ShutdownGrpcQueue(); });
 }
 
 std::unique_ptr<GrpcStream> GrpcStreamTester::CreateStream(
@@ -113,7 +109,7 @@ std::unique_ptr<GrpcStreamingReader> GrpcStreamTester::CreateStreamingReader() {
 
 std::unique_ptr<remote::GrpcUnaryCall> GrpcStreamTester::CreateUnaryCall() {
   return grpc_connection_.CreateUnaryCall("", Token{"", User{}},
-                                                grpc::ByteBuffer{});
+                                          grpc::ByteBuffer{});
 }
 
 void GrpcStreamTester::ShutdownGrpcQueue() {
@@ -130,7 +126,7 @@ void GrpcStreamTester::ForceFinish(
   // gRPC allows calling `TryCancel` more than once.
   context->TryCancel();
   mock_grpc_queue_.ExtractCompletions(end_states);
-  worker_queue_.EnqueueBlocking([] {});
+  worker_queue_->EnqueueBlocking([] {});
 }
 
 void GrpcStreamTester::KeepPollingGrpcQueue() {

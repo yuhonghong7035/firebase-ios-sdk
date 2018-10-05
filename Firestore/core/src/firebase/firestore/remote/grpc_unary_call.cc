@@ -16,9 +16,10 @@
 
 #include "Firestore/core/src/firebase/firestore/remote/grpc_unary_call.h"
 
-#include "Firestore/core/src/firebase/firestore/remote/grpc_connection.h"
-
 #include <utility>
+
+#include "Firestore/core/src/firebase/firestore/remote/grpc_connection.h"
+#include "Firestore/core/src/firebase/firestore/remote/grpc_util.h"
 
 namespace firebase {
 namespace firestore {
@@ -26,7 +27,7 @@ namespace remote {
 
 using util::AsyncQueue;
 using util::Status;
-using Tag = GrpcCompletion::Tag;
+using Type = GrpcCompletion::Type;
 
 GrpcUnaryCall::GrpcUnaryCall(
     std::unique_ptr<grpc::ClientContext> context,
@@ -47,31 +48,35 @@ GrpcUnaryCall::~GrpcUnaryCall() {
               "GrpcUnaryCall is being destroyed without proper shutdown");
 }
 
-void GrpcUnaryCall::Start(CallbackT&& callback) {
+void GrpcUnaryCall::Start(Callback&& callback) {
   callback_ = std::move(callback);
   call_->StartCall();
 
+  // For lifetime details, see `GrpcCompletion` class comment.
   finish_completion_ = new GrpcCompletion(
-      worker_queue_,
+      Type::Finish, worker_queue_,
       [this](bool /*ignored_ok*/, const GrpcCompletion* completion) {
         // Ignoring ok, status should contain all the relevant information.
         finish_completion_ = nullptr;
         auto callback = std::move(callback_);
-        callback(*completion->message());
+        if (completion->status()->ok()) {
+          callback(*completion->message());
+        } else {
+          callback(ConvertStatus(*completion->status()));
+        }
         // This `GrpcUnaryCall`'s lifetime might have been ended by the
         // callback.
-      },
-      Tag::Finish);
+      });
 
   call_->Finish(finish_completion_->message(), finish_completion_->status(),
                 finish_completion_);
 }
 
-void GrpcUnaryCall::Finish() {
+void GrpcUnaryCall::FinishImmediately() {
   Shutdown();
 }
 
-void GrpcUnaryCall::FinishWithError(const util::Status& status) {
+void GrpcUnaryCall::FinishAndNotify(const util::Status& status) {
   Shutdown();
 
   auto callback = std::move(callback_);
@@ -97,7 +102,7 @@ void GrpcUnaryCall::Shutdown() {
   finish_completion_ = nullptr;
 }
 
-GrpcCallInterface::MetadataT GrpcUnaryCall::GetResponseHeaders() const {
+GrpcCall::Metadata GrpcUnaryCall::GetResponseHeaders() const {
   return context_->GetServerInitialMetadata();
 }
 

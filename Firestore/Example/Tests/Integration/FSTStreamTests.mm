@@ -248,7 +248,7 @@ class MockCredentialsProvider : public firebase::firestore::auth::EmptyCredentia
 
   // Simulate a final callback from GRPC
   [_workerDispatchQueue dispatchAsync:^{
-    _watchStream->OnStreamError(util::Status::OK());
+    _watchStream->OnStreamFinish(util::Status::OK());
   }];
 
   [self verifyDelegateObservedStates:@[ @"watchStreamDidOpen", @"watchStreamWasInterrupted", @"watchStreamWasInterrupted" ]];
@@ -272,7 +272,7 @@ class MockCredentialsProvider : public firebase::firestore::auth::EmptyCredentia
 
   // Simulate a final callback from GRPC
   [_workerDispatchQueue dispatchAsync:^{
-    _writeStream->OnStreamError(util::Status::OK());
+    _writeStream->OnStreamFinish(util::Status::OK());
   }];
 
   [self verifyDelegateObservedStates:@[ @"writeStreamDidOpen", @"writeStreamWasInterrupted", @"writeStreamWasInterrupted" ]];
@@ -378,7 +378,7 @@ class MockCredentialsProvider : public firebase::firestore::auth::EmptyCredentia
 
   // Simulate callback from gRPC with an unauthenticated error -- this should invalidate the token.
    [_workerDispatchQueue dispatchAsync:^{
-    _watchStream->OnStreamError(util::Status{FirestoreErrorCode::Unauthenticated, ""});
+    _watchStream->OnStreamFinish(util::Status{FirestoreErrorCode::Unauthenticated, ""});
   }];
   // Drain the queue.
   [_workerDispatchQueue dispatchSync:^{}];
@@ -392,7 +392,7 @@ class MockCredentialsProvider : public firebase::firestore::auth::EmptyCredentia
   }];
   // Simulate a different error -- token should not be invalidated this time.
   [_workerDispatchQueue dispatchAsync:^{
-    _watchStream->OnStreamError(util::Status{FirestoreErrorCode::Unavailable, ""});
+    _watchStream->OnStreamFinish(util::Status{FirestoreErrorCode::Unavailable, ""});
   }];
    [_workerDispatchQueue dispatchSync:^{}];
   

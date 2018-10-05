@@ -21,7 +21,7 @@
 #include <map>
 #include <memory>
 
-#include "Firestore/core/src/firebase/firestore/remote/grpc_call_interface.h"
+#include "Firestore/core/src/firebase/firestore/remote/grpc_call.h"
 #include "Firestore/core/src/firebase/firestore/remote/grpc_completion.h"
 #include "Firestore/core/src/firebase/firestore/util/async_queue.h"
 #include "Firestore/core/src/firebase/firestore/util/status.h"
@@ -40,10 +40,9 @@ class GrpcConnection;
  * Sends a single request to the server and invokes the given callback with the
  * server response.
  */
-class GrpcUnaryCall : public GrpcCallInterface {
+class GrpcUnaryCall : public GrpcCall {
  public:
-  using CallbackT =
-      std::function<void(const util::StatusOr<grpc::ByteBuffer>&)>;
+  using Callback = std::function<void(const util::StatusOr<grpc::ByteBuffer>&)>;
 
   GrpcUnaryCall(std::unique_ptr<grpc::ClientContext> context,
                 std::unique_ptr<grpc::GenericClientAsyncResponseReader> call,
@@ -57,7 +56,7 @@ class GrpcUnaryCall : public GrpcCallInterface {
    * the call. If the call fails, the `callback` will be invoked with a non-ok
    * status.
    */
-  void Start(CallbackT&& callback);
+  void Start(Callback&& callback);
 
   /**
    * If the call is in progress, attempts to finish the call early, effectively
@@ -70,19 +69,19 @@ class GrpcUnaryCall : public GrpcCallInterface {
    * If this function succeeds in cancelling the call, the callback will not be
    * invoked.
    */
-  void Finish() override;
+  void FinishImmediately() override;
 
   /** Like `Finish`, but always invokes the callback with the given `status`. */
-  void FinishWithError(const util::Status& status) override;
+  void FinishAndNotify(const util::Status& status) override;
 
   /**
    * Returns the metadata received from the server.
    *
    * Can only be called once the `GrpcUnaryCall` has finished.
    */
-  MetadataT GetResponseHeaders() const override;
+  Metadata GetResponseHeaders() const override;
 
-  // For tests only
+  /** For tests only */
   grpc::ClientContext* context() {
     return context_.get();
   }
@@ -100,7 +99,7 @@ class GrpcUnaryCall : public GrpcCallInterface {
   GrpcConnection* grpc_connection_ = nullptr;
 
   GrpcCompletion* finish_completion_ = nullptr;
-  CallbackT callback_;
+  Callback callback_;
 };
 
 }  // namespace remote
