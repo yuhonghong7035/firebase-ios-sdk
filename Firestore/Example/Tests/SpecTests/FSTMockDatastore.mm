@@ -40,6 +40,7 @@
 #include "Firestore/core/src/firebase/firestore/util/log.h"
 #include "Firestore/core/src/firebase/firestore/util/string_apple.h"
 #include "absl/memory/memory.h"
+#include "grpcpp/completion_queue.h"
 
 using firebase::firestore::auth::CredentialsProvider;
 using firebase::firestore::auth::EmptyCredentialsProvider;
@@ -248,6 +249,9 @@ class MockWriteStream : public WriteStream {
 @implementation FSTMockDatastore {
   std::shared_ptr<firebase::firestore::remote::MockWatchStream> _watchStream;
   std::shared_ptr<firebase::firestore::remote::MockWriteStream> _writeStream;
+
+  std::unique_ptr<firebase::firestore::remote::MockConnectivityMonitor> _connectivityMonitor;
+  grpc::CompletionQueue _grpcQueue;
   std::unique_ptr<firebase::firestore::remote::GrpcConnection> _grpcConnection;
 }
 
@@ -261,11 +265,11 @@ class MockWriteStream : public WriteStream {
                              credentials:credentials]) {
     _workerDispatchQueue = workerDispatchQueue;
     _credentials = credentials;
-    auto connectivityMonitor =
+    _connectivityMonitor =
         absl::make_unique<firebase::firestore::remote::MockConnectivityMonitor>();
     _grpcConnection = absl::make_unique<firebase::firestore::remote::GrpcConnection>(
-        *databaseInfo, [workerDispatchQueue implementation], nullptr,
-        std::move(connectivityMonitor));
+        *databaseInfo, [workerDispatchQueue implementation], &_grpcQueue,
+        _connectivityMonitor.get());
   }
   return self;
 }
@@ -310,7 +314,7 @@ class MockWriteStream : public WriteStream {
 }
 
 - (void)failWriteWithError:(NSError *_Nullable)error {
-  _watchStream->FailStreamWithError(error);
+  _writeStream->FailStreamWithError(error);
 }
 
 - (void)writeWatchChange:(FSTWatchChange *)change snapshotVersion:(const SnapshotVersion &)snap {
