@@ -20,6 +20,7 @@
 
 #include "Firestore/core/src/firebase/firestore/remote/grpc_connection.h"
 #include "Firestore/core/src/firebase/firestore/remote/grpc_util.h"
+#include "Firestore/core/src/firebase/firestore/util/hard_assert.h"
 
 namespace firebase {
 namespace firestore {
@@ -35,11 +36,11 @@ GrpcUnaryCall::GrpcUnaryCall(
     AsyncQueue* worker_queue,
     GrpcConnection* grpc_connection,
     const grpc::ByteBuffer& request)
-    : context_{std::move(context)},
-      call_{std::move(call)},
+    : context_{std::move(NOT_NULL(context))},
+      call_{std::move(NOT_NULL(call))},
       request_{request},
-      worker_queue_{worker_queue},
-      grpc_connection_{grpc_connection} {
+      worker_queue_{NOT_NULL(worker_queue)},
+      grpc_connection_{NOT_NULL(grpc_connection)} {
   grpc_connection_->Register(this);
 }
 
@@ -57,7 +58,10 @@ void GrpcUnaryCall::Start(Callback&& callback) {
       Type::Finish, worker_queue_,
       [this](bool /*ignored_ok*/, const GrpcCompletion* completion) {
         // Ignoring ok, status should contain all the relevant information.
+        
         finish_completion_ = nullptr;
+        FinishImmediately();
+        
         auto callback = std::move(callback_);
         if (completion->status()->ok()) {
           callback(*completion->message());

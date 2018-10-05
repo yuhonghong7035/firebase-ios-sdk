@@ -194,7 +194,7 @@ using firebase::firestore::remote::WriteStream;
 
 - (void)commitMutations:(NSArray<FSTMutation *> *)mutations
              completion:(FSTVoidErrorBlock)completion {
-  // TODO(varconst) _datastore->CommitMutations(mutations, completion);
+  _datastore->CommitMutations(mutations, completion);
 }
 
 - (void)lookupDocuments:(const std::vector<DocumentKey> &)keys
