@@ -48,8 +48,7 @@ namespace remote {
  * gRPC operation.
  *
  * `GrpcCompletion` is "self-owned"; `GrpcCompletion` deletes itself in its
- * `Complete`
- * method.
+ * `Complete` method.
  *
  * `GrpcCompletion` expects all gRPC objects pertaining to the current stream to
  * remain valid until the `GrpcCompletion` comes back from the gRPC completion
@@ -60,6 +59,12 @@ class GrpcCompletion {
   enum class Tag { Start, Read, Write, Finish };
 
   /**
+   * This is only to aid debugging and testing; type allows easily
+   * distinguishing between pending completions of a gRPC call.
+   */
+  enum class Type { Start, Read, Write, Finish };
+
+  /**
    * The boolean parameter is used to indicate whether the corresponding gRPC
    * operation finished successfully or not.
    *
@@ -67,9 +72,9 @@ class GrpcCompletion {
    */
   using Callback = std::function<void(bool, const GrpcCompletion*)>;
 
-  GrpcCompletion(util::AsyncQueue* firestore_queue,
-                 Callback&& callback,
-                 Tag tag);
+  GrpcCompletion(Type type,
+                 util::AsyncQueue* firestore_queue,
+                 Callback&& callback);
 
   /**
    * Marks the `GrpcCompletion` as having come back from the gRPC completion
@@ -106,8 +111,8 @@ class GrpcCompletion {
     return &status_;
   }
 
-  Tag tag() const {
-    return tag_;
+  Type type() const {
+    return type_;
   }
 
  private:
@@ -127,7 +132,7 @@ class GrpcCompletion {
   std::promise<void> off_queue_;
   std::future<void> off_queue_future_;
 
-  Tag tag_{};
+  Type type_{};
 };
 
 }  // namespace remote

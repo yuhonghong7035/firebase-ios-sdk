@@ -40,11 +40,10 @@ class GrpcConnection;
  * Sends a single request to the server, reads one or more streaming server
  * responses, and invokes the given callback with the accumulated responses.
  */
-class GrpcStreamingReader : public GrpcCallInterface,
-                            public GrpcStreamObserver {
+class GrpcStreamingReader : public GrpcCall, public GrpcStreamObserver {
  public:
   using ResponsesT = std::vector<grpc::ByteBuffer>;
-  using CallbackT = std::function<void(const util::StatusOr<ResponsesT>&)>;
+  using Callback = std::function<void(const util::StatusOr<ResponsesT>&)>;
 
   GrpcStreamingReader(
       std::unique_ptr<grpc::ClientContext> context,
@@ -58,7 +57,7 @@ class GrpcStreamingReader : public GrpcCallInterface,
    * results of the call. If the call fails, the `callback` will be invoked with
    * a non-ok status.
    */
-  void Start(CallbackT&& callback);
+  void Start(Callback&& callback);
 
   /**
    * If the call is in progress, attempts to cancel the call; otherwise, it's
@@ -70,9 +69,9 @@ class GrpcStreamingReader : public GrpcCallInterface,
    * If this function succeeds in cancelling the call, the callback will not be
    * invoked.
    */
-  void Finish() override;
+  void FinishImmediately() override;
 
-  void FinishWithError(const util::Status& status) override;
+  void FinishAndNotify(const util::Status& status) override;
 
   /**
    * Returns the metadata received from the server.
@@ -80,7 +79,7 @@ class GrpcStreamingReader : public GrpcCallInterface,
    * Can only be called once the `GrpcStreamingReader` has received the first
    * message from the server.
    */
-  MetadataT GetResponseHeaders() const override {
+  Metadata GetResponseHeaders() const override {
     return stream_->GetResponseHeaders();
   }
 
@@ -88,7 +87,7 @@ class GrpcStreamingReader : public GrpcCallInterface,
   void OnStreamRead(const grpc::ByteBuffer& message) override;
   void OnStreamFinish(const util::Status& status) override;
 
-  // For tests only
+  /** For tests only */
   grpc::ClientContext* context() {
     return stream_->context();
   }
@@ -97,7 +96,7 @@ class GrpcStreamingReader : public GrpcCallInterface,
   std::unique_ptr<GrpcStream> stream_;
   grpc::ByteBuffer request_;
 
-  CallbackT callback_;
+  Callback callback_;
   ResponsesT responses_;
 };
 
