@@ -13,8 +13,15 @@
 // limitations under the License.
 
 #import "Private/FIRBundleUtil.h"
+#import "Private/FIRLogger.h"
+
+#import <GoogleUtilities/GULAppEnvironmentUtil.h>
 
 @implementation FIRBundleUtil
+
++ (NSArray<NSString *> *)appExtensionSuffixes {
+  return @[ @"TodayExtension", @"NotificationServiceExtension", @"NotificationContentExtension" ];
+}
 
 + (NSArray *)relevantBundles {
   return @[ [NSBundle mainBundle], [NSBundle bundleForClass:[self class]] ];
@@ -49,8 +56,26 @@
   for (NSBundle *bundle in bundles) {
     if ([bundle.bundleIdentifier isEqualToString:bundleIdentifier]) {
       return YES;
+    } else if ([GULAppEnvironmentUtil isAppExtension]) {
+      // If it's an App Extension, the bundleID should be the expected bundleID + a pre-determined
+      // suffix based on the extension type. Compare against known types and log that support may
+      // not be available for all SDKs in the extension.
+      // TODO: We should use the Core configuration process and allow SDKs to specify which
+      //       extensions they explicitly support. This way errors could be thrown or logged if an
+      //       SDK was accessed inside an extension it doesn't support.
+      for (NSString *extensionSuffix in [self appExtensionSuffixes]) {
+        NSString *bundleWithSuffix =
+            [NSString stringWithFormat:@"%@.%@", bundleIdentifier, extensionSuffix];
+        if ([bundleIdentifier isEqualToString:bundleWithSuffix]) {
+          FIRLogWarning(kFIRLoggerCore, @"I-COR000035",
+                        @"Not all Firebase SDKs support running in an App Extension - please "
+                        @"ensure all functionalities are tested and report any issues.");
+          return YES;
+        }
+      }
     }
   }
+
   return NO;
 }
 
