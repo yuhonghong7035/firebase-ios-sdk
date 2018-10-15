@@ -44,9 +44,9 @@ NS_ASSUME_NONNULL_BEGIN
 //- (void)writeWatchTargetAddedWithTargetIDs:(NSArray<FSTBoxedTargetID *> *)targetIDs;
 /** Injects an Added WatchChange that marks the given targetIDs current. */
 //- (void)writeWatchCurrentWithTargetIDs:(NSArray<FSTBoxedTargetID *> *)targetIDs
-                       // snapshotVersion:
-                       //     (const firebase::firestore::model::SnapshotVersion &)snapshotVersion
-                       //     resumeToken:(NSData *)resumeToken;
+// snapshotVersion:
+//     (const firebase::firestore::model::SnapshotVersion &)snapshotVersion
+//     resumeToken:(NSData *)resumeToken;
 
 /** Injects a WatchChange as though it had come from the backend. */
 - (void)writeWatchChange:(FSTWatchChange *)change
@@ -56,7 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)failWatchStreamWithError:(NSError *)error;
 
 /** Returns the set of active targets on the watch stream. */
-- (NSDictionary<FSTBoxedTargetID*, FSTQueryData *>* )activeTargets;
+- (NSDictionary<FSTBoxedTargetID *, FSTQueryData *> *)activeTargets;
 
 /** Helper method to expose watch stream state to verify in tests. */
 - (BOOL)isWatchStreamOpen;
@@ -66,7 +66,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Returns the next write that was "sent to the backend", failing if there are no queued sent
  */
-- (NSArray<FSTMutation *>* )nextSentWrite;
+- (NSArray<FSTMutation *> *)nextSentWrite;
 
 /** Returns the number of writes that have been sent to the backend but not waited on yet. */
 - (int)writesSent;

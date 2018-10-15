@@ -209,7 +209,7 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (void)validateNextWriteSent:(FSTMutation *)expectedWrite {
-  NSArray<FSTMutation *>* request = [self.datastore nextSentWrite];
+  NSArray<FSTMutation *> *request = [self.datastore nextSentWrite];
   // Make sure the write went through the pipe like we expected it to.
   HARD_ASSERT(request.count == 1, "Only single mutation requests are supported at the moment");
   FSTMutation *actualWrite = request[0];

@@ -62,7 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
   std::unique_ptr<AsyncQueue> _impl;
 }
 
-- (AsyncQueue*)implementation {
+- (AsyncQueue *)implementation {
   return _impl.get();
 }
 

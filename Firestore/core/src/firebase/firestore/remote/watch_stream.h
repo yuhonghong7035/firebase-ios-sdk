@@ -68,7 +68,8 @@ class WatchStream : public Stream {
    * Unregisters interest in the results of the query associated with the given
    * `target_id`.
    */
-  virtual /*virtual for tests only*/ void UnwatchTargetId(model::TargetId target_id);
+  virtual /*virtual for tests only*/ void UnwatchTargetId(
+      model::TargetId target_id);
 
  private:
   std::unique_ptr<GrpcStream> CreateGrpcStream(

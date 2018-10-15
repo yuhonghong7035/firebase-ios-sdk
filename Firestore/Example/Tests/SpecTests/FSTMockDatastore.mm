@@ -128,7 +128,7 @@ class MockWatchStream : public WatchStream {
     if ([change isKindOfClass:[FSTWatchTargetChange class]]) {
       FSTWatchTargetChange *targetChange = (FSTWatchTargetChange *)change;
       if (targetChange.cause) {
-        for (NSNumber* target_id in targetChange.targetIDs) {
+        for (NSNumber *target_id in targetChange.targetIDs) {
           if (!active_targets_[target_id]) {
             // Technically removing an unknown target is valid (e.g. it could race with a
             // server-side removal), but we want to pay extra careful attention in tests
@@ -152,7 +152,7 @@ class MockWatchStream : public WatchStream {
 
  private:
   bool open_ = false;
-  NSMutableDictionary<FSTBoxedTargetID*, FSTQueryData*>* active_targets_ = nullptr;
+  NSMutableDictionary<FSTBoxedTargetID *, FSTQueryData *> *active_targets_ = nullptr;
   FSTMockDatastore *datastore_ = nullptr;
   id<FSTWatchStreamDelegate> delegate_ = nullptr;
 };
@@ -196,7 +196,7 @@ class MockWriteStream : public WriteStream {
   }
 
   /** Injects a write ack as though it had come from the backend in response to a write. */
-  void AckWrite(const SnapshotVersion& commitVersion, NSArray<FSTMutationResult*>* results) {
+  void AckWrite(const SnapshotVersion &commitVersion, NSArray<FSTMutationResult *> *results) {
     [delegate_ writeStreamDidReceiveResponseWithVersion:commitVersion mutationResults:results];
   }
 

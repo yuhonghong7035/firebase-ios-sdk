@@ -39,8 +39,6 @@
 #include "Firestore/core/src/firebase/firestore/model/snapshot_version.h"
 #include "Firestore/core/src/firebase/firestore/util/hard_assert.h"
 #include "Firestore/core/src/firebase/firestore/util/log.h"
-#include "Firestore/core/src/firebase/firestore/model/snapshot_version.h"
-#include "Firestore/core/src/firebase/firestore/util/hard_assert.h"
 #include "Firestore/core/src/firebase/firestore/util/string_apple.h"
 #include "absl/memory/memory.h"
 
@@ -261,7 +259,7 @@ static const int kMaxPendingWrites = 10;
   if ([self.listenTargets count] == 0) {
     if ([self isNetworkEnabled]) {
       if (_watchStream->IsOpen()) {
-      _watchStream->MarkIdle();
+        _watchStream->MarkIdle();
       } else {
         // Revert to OnlineState::Unknown if the watch stream is not open and we have no listeners,
         // since without any listens to send we cannot confirm if the stream is healthy and upgrade
@@ -329,7 +327,7 @@ static const int kMaxPendingWrites = 10;
   if (!error) {
     // Graceful stop (due to Stop() or idle timeout). Make sure that's desirable.
     HARD_ASSERT(![self shouldStartWatchStream],
-        "Watch stream was stopped gracefully while still needed.");
+                "Watch stream was stopped gracefully while still needed.");
   }
 
   [self cleanUpWatchStreamState];
@@ -546,7 +544,7 @@ static const int kMaxPendingWrites = 10;
   if (!error) {
     // Graceful stop (due to Stop() or idle timeout). Make sure that's desirable.
     HARD_ASSERT(![self shouldStartWriteStream],
-        "Write stream was stopped gracefully while still needed.");
+                "Write stream was stopped gracefully while still needed.");
   }
 
   // If the write stream closed due to an error, invoke the error callbacks if there are pending
