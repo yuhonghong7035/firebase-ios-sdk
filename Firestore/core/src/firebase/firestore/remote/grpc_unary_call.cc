@@ -20,7 +20,6 @@
 
 #include "Firestore/core/src/firebase/firestore/remote/grpc_connection.h"
 #include "Firestore/core/src/firebase/firestore/remote/grpc_util.h"
-#include "Firestore/core/src/firebase/firestore/util/hard_assert.h"
 
 namespace firebase {
 namespace firestore {
@@ -36,17 +35,18 @@ GrpcUnaryCall::GrpcUnaryCall(
     AsyncQueue* worker_queue,
     GrpcConnection* grpc_connection,
     const grpc::ByteBuffer& request)
-    : context_{std::move(NOT_NULL(context))},
-      call_{std::move(NOT_NULL(call))},
+    : context_{std::move(context)},
+      call_{std::move(call)},
       request_{request},
-      worker_queue_{NOT_NULL(worker_queue)},
-      grpc_connection_{NOT_NULL(grpc_connection)} {
+      worker_queue_{worker_queue},
+      grpc_connection_{grpc_connection} {
   grpc_connection_->Register(this);
 }
 
 GrpcUnaryCall::~GrpcUnaryCall() {
   HARD_ASSERT(!finish_completion_,
               "GrpcUnaryCall is being destroyed without proper shutdown");
+  MaybeUnregister();
 }
 
 void GrpcUnaryCall::Start(Callback&& callback) {
@@ -58,10 +58,9 @@ void GrpcUnaryCall::Start(Callback&& callback) {
       Type::Finish, worker_queue_,
       [this](bool /*ignored_ok*/, const GrpcCompletion* completion) {
         // Ignoring ok, status should contain all the relevant information.
-        
         finish_completion_ = nullptr;
-        FinishImmediately();
-        
+        Shutdown();
+
         auto callback = std::move(callback_);
         if (completion->status()->ok()) {
           callback(*completion->message());
@@ -88,11 +87,7 @@ void GrpcUnaryCall::FinishAndNotify(const util::Status& status) {
 }
 
 void GrpcUnaryCall::Shutdown() {
-  if (grpc_connection_) {
-    grpc_connection_->Unregister(this);
-    grpc_connection_ = nullptr;
-  }
-
+  MaybeUnregister();
   if (!finish_completion_) {
     // Nothing to cancel.
     return;
@@ -104,6 +99,13 @@ void GrpcUnaryCall::Shutdown() {
   // This function blocks.
   finish_completion_->WaitUntilOffQueue();
   finish_completion_ = nullptr;
+}
+
+void GrpcUnaryCall::MaybeUnregister() {
+  if (grpc_connection_) {
+    grpc_connection_->Unregister(this);
+    grpc_connection_ = nullptr;
+  }
 }
 
 GrpcCall::Metadata GrpcUnaryCall::GetResponseHeaders() const {

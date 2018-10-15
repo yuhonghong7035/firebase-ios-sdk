@@ -120,6 +120,7 @@ using firebase::firestore::remote::WriteStream;
     _serializer = [[FSTSerializerBeta alloc] initWithDatabaseID:&databaseInfo->database_id()];
 
     _datastore = std::make_shared<Datastore>(*_databaseInfo, [_workerDispatchQueue implementation], _credentials, _serializer);
+    _datastore->Start();
   }
   return self;
 }
