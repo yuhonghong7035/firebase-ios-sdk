@@ -98,7 +98,8 @@ using firebase::firestore::remote::WriteStream;
     _datastore = std::make_shared<Datastore>(*_databaseInfo, [_workerDispatchQueue implementation], _credentials, _serializer);
     _datastore->Start();
     if (!databaseInfo->ssl_enabled()) {
-      _datastore->UseInsecureChannel();
+      // OBC
+      firebase::firestore::remote::GrpcConnection::UseInsecureChannel();
     }
   }
   return self;
