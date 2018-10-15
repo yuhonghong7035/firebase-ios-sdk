@@ -56,8 +56,6 @@ namespace remote {
  */
 class GrpcCompletion {
  public:
-  enum class Tag { Start, Read, Write, Finish };
-
   /**
    * This is only to aid debugging and testing; type allows easily
    * distinguishing between pending completions of a gRPC call.
