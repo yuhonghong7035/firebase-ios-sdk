@@ -713,9 +713,6 @@ static NSString *Describe(NSData *data) {
 
     // Read and parse the JSON from the file.
     NSString *fileName = [file stringByDeletingPathExtension];
-    if (![fileName hasPrefix:@"offline"]) {
-      continue;
-    }
     NSString *path = [bundle pathForResource:fileName ofType:@"json"];
     NSData *json = [NSData dataWithContentsOfFile:path];
     XCTAssertNotNil(json);
