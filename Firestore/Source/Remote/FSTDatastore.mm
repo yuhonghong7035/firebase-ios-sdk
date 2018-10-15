@@ -16,8 +16,6 @@
 
 #import "Firestore/Source/Remote/FSTDatastore.h"
 
-#import <ProtoRPC/ProtoRPC.h>
-
 #include <map>
 #include <memory>
 #include <vector>
@@ -32,8 +30,6 @@
 #import "Firestore/Source/Remote/FSTStream.h"
 #import "Firestore/Source/Util/FSTDispatchQueue.h"
 
-#import "Firestore/Protos/objc/google/firestore/v1beta1/Firestore.pbrpc.h"
-
 #include "Firestore/core/src/firebase/firestore/auth/credentials_provider.h"
 #include "Firestore/core/src/firebase/firestore/auth/token.h"
 #include "Firestore/core/src/firebase/firestore/core/database_info.h"
@@ -44,6 +40,7 @@
 #include "Firestore/core/src/firebase/firestore/util/log.h"
 #include "Firestore/core/src/firebase/firestore/util/string_apple.h"
 #include "absl/memory/memory.h"
+#include "grpcpp/support/status_code_enum.h"
 
 namespace util = firebase::firestore::util;
 using firebase::firestore::auth::CredentialsProvider;
@@ -53,6 +50,11 @@ using firebase::firestore::model::DocumentKey;
 using firebase::firestore::model::DatabaseId;
 
 NS_ASSUME_NONNULL_BEGIN
+
+// TODO(varconst): this is the only leftover from the dependency on gRPC
+// Objective-C client (where this constant is declared in `GRPCCall.h`. Remove
+// this once error handling is fully translated to C++.
+NSString *const kGRPCErrorDomain = @"io.grpc";
 
 #pragma mark - FSTDatastore
 
@@ -98,7 +100,7 @@ using firebase::firestore::remote::WriteStream;
     _datastore = std::make_shared<Datastore>(*_databaseInfo, [_workerDispatchQueue implementation], _credentials, _serializer);
     _datastore->Start();
     if (!databaseInfo->ssl_enabled()) {
-      // OBC
+      // OBCD
       firebase::firestore::remote::GrpcConnection::UseInsecureChannel();
     }
   }
@@ -118,13 +120,14 @@ using firebase::firestore::remote::WriteStream;
 /**
  * Converts the error to an error within the domain FIRFirestoreErrorDomain.
  */
+// OBCD
 + (NSError *)firestoreErrorForError:(NSError *)error {
   if (!error) {
     return error;
   } else if ([error.domain isEqualToString:FIRFirestoreErrorDomain]) {
     return error;
   } else if ([error.domain isEqualToString:kGRPCErrorDomain]) {
-    HARD_ASSERT(error.code >= GRPCErrorCodeCancelled && error.code <= GRPCErrorCodeUnauthenticated,
+    HARD_ASSERT(error.code >= grpc::CANCELLED && error.code <= grpc::UNAUTHENTICATED,
                 "Unknown GRPC error code: %s", error.code);
     return
         [NSError errorWithDomain:FIRFirestoreErrorDomain code:error.code userInfo:error.userInfo];

@@ -160,7 +160,7 @@ NS_ASSUME_NONNULL_BEGIN
   NSString *projectID = [FSTIntegrationTestCase projectID];
   FIRFirestoreSettings *settings = [FSTIntegrationTestCase settings];
   if (!settings.sslEnabled) {
-    // OBC
+    // OBCD
     //[GRPCCall useInsecureConnectionsForHost:settings.host];
   }
 

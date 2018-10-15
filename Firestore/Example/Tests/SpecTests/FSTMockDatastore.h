@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Watch Stream manipulation.
 
-// OBC appear unused
+// OBCD appear unused
 /** Injects an Added WatchChange containing the given targetIDs. */
 //- (void)writeWatchTargetAddedWithTargetIDs:(NSArray<FSTBoxedTargetID *> *)targetIDs;
 /** Injects an Added WatchChange that marks the given targetIDs current. */
