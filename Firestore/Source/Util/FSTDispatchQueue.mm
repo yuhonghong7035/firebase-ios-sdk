@@ -98,6 +98,10 @@ NS_ASSUME_NONNULL_BEGIN
   _impl->VerifyIsCurrentQueue();
 }
 
+- (void)enterCheckedOperation:(void (^)(void))block {
+  _impl->ExecuteBlocking([block] { block(); });
+}
+
 - (void)dispatchAsync:(void (^)(void))block {
   _impl->Enqueue([block] { block(); });
 }
