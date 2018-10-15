@@ -17,8 +17,6 @@
 #import <FirebaseFirestore/FirebaseFirestore.h>
 
 #import <FirebaseFirestore/FIRTimestamp.h>
-#import <GRPCClient/GRPCCall+ChannelCredentials.h>
-#import <GRPCClient/GRPCCall+Tests.h>
 #import <XCTest/XCTest.h>
 
 #import "Firestore/Source/API/FIRDocumentReference+Internal.h"
@@ -162,7 +160,8 @@ NS_ASSUME_NONNULL_BEGIN
   NSString *projectID = [FSTIntegrationTestCase projectID];
   FIRFirestoreSettings *settings = [FSTIntegrationTestCase settings];
   if (!settings.sslEnabled) {
-    [GRPCCall useInsecureConnectionsForHost:settings.host];
+    // OBC
+    //[GRPCCall useInsecureConnectionsForHost:settings.host];
   }
 
   DatabaseId database_id(util::MakeString(projectID), DatabaseId::kDefault);

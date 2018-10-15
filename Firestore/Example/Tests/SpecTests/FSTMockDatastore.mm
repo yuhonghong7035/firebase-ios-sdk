@@ -48,8 +48,6 @@ using firebase::firestore::core::DatabaseInfo;
 using firebase::firestore::model::DatabaseId;
 using firebase::firestore::model::SnapshotVersion;
 
-@class GRPCProtoCall;
-
 NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - FSTMockWatchStream
@@ -292,10 +290,6 @@ class MockWriteStream : public WriteStream {
       _grpcConnection.get(), delegate, self);
 
   return _writeStream;
-}
-
-- (void)authorizeAndStartRPC:(GRPCProtoCall *)rpc completion:(FSTVoidErrorBlock)completion {
-  HARD_FAIL("FSTMockDatastore shouldn't be starting any RPCs.");
 }
 
 #pragma mark - Method exposed for tests to call.

@@ -37,7 +37,6 @@
 @class FSTQueryData;
 @class FSTSerializerBeta;
 @class FSTWatchChange;
-@class GRPCCall;
 @class GRXWriter;
 
 NS_ASSUME_NONNULL_BEGIN

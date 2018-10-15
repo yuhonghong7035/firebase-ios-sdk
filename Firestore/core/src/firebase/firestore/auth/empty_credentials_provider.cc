@@ -22,7 +22,7 @@ namespace auth {
 
 void EmptyCredentialsProvider::GetToken(TokenListener completion) {
   if (completion) {
-    // Unauthenticated token will force the GRPC fallback to use default
+    // Unauthenticated token will force the gRPC fallback to use default
     // settings.
     completion(Token::Unauthenticated());
   }

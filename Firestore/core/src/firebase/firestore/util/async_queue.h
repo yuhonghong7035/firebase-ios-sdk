@@ -116,7 +116,7 @@ class AsyncQueue {
 
   // Immediately executes the `operation` on the queue.
   //
-  // This is largely a workaround to allow other classes (GRPC) to directly
+  // This is largely a workaround to allow other classes (gRPC) to directly
   // access the underlying dispatch queue without getting `AsyncQueue` into an
   // inconsistent state.
   //
