@@ -52,7 +52,7 @@ using firebase::firestore::model::DatabaseId;
 NS_ASSUME_NONNULL_BEGIN
 
 // TODO(varconst): this is the only leftover from the dependency on gRPC
-// Objective-C client (where this constant is declared in `GRPCCall.h`. Remove
+// Objective-C client (where this constant is declared in `GRPCCall.h`). Remove
 // this once error handling is fully translated to C++.
 NSString *const kGRPCErrorDomain = @"io.grpc";
 
@@ -121,7 +121,6 @@ using firebase::firestore::remote::WriteStream;
 /**
  * Converts the error to an error within the domain FIRFirestoreErrorDomain.
  */
-// OBCD
 + (NSError *)firestoreErrorForError:(NSError *)error {
   if (!error) {
     return error;
