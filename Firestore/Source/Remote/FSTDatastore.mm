@@ -73,6 +73,7 @@ NSString *const kGRPCErrorDomain = @"io.grpc";
 @end
 
 using firebase::firestore::remote::Datastore;
+using firebase::firestore::remote::GrpcConnection;
 using firebase::firestore::remote::WatchStream;
 using firebase::firestore::remote::WriteStream;
 
@@ -101,8 +102,7 @@ using firebase::firestore::remote::WriteStream;
                                              _credentials, _serializer);
     _datastore->Start();
     if (!databaseInfo->ssl_enabled()) {
-      // OBCD
-      firebase::firestore::remote::GrpcConnection::UseInsecureChannel();
+      GrpcConnection::UseInsecureChannel(databaseInfo->host());
     }
   }
   return self;
