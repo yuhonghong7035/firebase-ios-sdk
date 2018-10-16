@@ -94,6 +94,8 @@ class MockWatchStream : public WatchStream {
   }
 
   void Stop() override {
+    WatchStream::Stop();
+    open_ = false;
     [active_targets_ removeAllObjects];
   }
 
@@ -105,12 +107,13 @@ class MockWatchStream : public WatchStream {
   }
 
   void WatchQuery(FSTQueryData *query) override {
-    LOG_DEBUG("WatchQuery: %s: %s", query.targetID, query.query);
-    datastore_.watchStreamRequestCount += 1;
+    LOG_DEBUG("WatchQuery: %s: %s, %s", query.targetID, query.query, query.resumeToken);
+
     // Snapshot version is ignored on the wire
     FSTQueryData *sentQueryData = [query queryDataByReplacingSnapshotVersion:SnapshotVersion::None()
                                                                  resumeToken:query.resumeToken
                                                               sequenceNumber:query.sequenceNumber];
+    datastore_.watchStreamRequestCount += 1;
     active_targets_[@(query.targetID)] = sentQueryData;
   }
 
@@ -175,6 +178,15 @@ class MockWriteStream : public WriteStream {
     open_ = true;
     sent_mutations_ = {};
     [delegate_ writeStreamDidOpen];
+  }
+  
+  void Stop() override {
+    datastore_.writeStreamRequestCount += 1;
+    WriteStream::Stop();
+
+    sent_mutations_ = {};
+    open_ = false;
+    SetHandshakeComplete(false);
   }
 
   bool IsStarted() const override {

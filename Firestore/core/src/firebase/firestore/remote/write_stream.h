@@ -95,8 +95,8 @@ class WriteStream : public Stream {
 
  protected:
   // For tests only
-  void SetHandshakeComplete() {
-    handshake_complete_ = true;
+  void SetHandshakeComplete(bool value = true) {
+    handshake_complete_ = value;
   }
 
  private:
