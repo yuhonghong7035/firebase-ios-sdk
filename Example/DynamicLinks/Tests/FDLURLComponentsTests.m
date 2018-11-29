@@ -517,6 +517,28 @@ static NSString *const kFDLURLCustomDomain = @"https://foo.com/path";
 
   FIRDynamicLinkComponents *components =
       [FIRDynamicLinkComponents componentsWithLink:link
+                                            domain:@"this is invalid domain URI Prefix"];
+
+  XCTAssertNotNil(components);
+  XCTAssertNil(components.url);
+}
+
+- (void)testFDLComponentsIsNotNilForDomainWithScheme {
+  NSString *linkString = @"https://google.com/mylink";
+  NSURL *link = [NSURL URLWithString:linkString];
+
+  FIRDynamicLinkComponents *components =
+      [FIRDynamicLinkComponents componentsWithLink:link domain:@"https://xyz.page.link"];
+
+  XCTAssertNotNil(components);
+}
+
+- (void)testFDLComponentsFailsOnMalformedDomainURIPrefix {
+  NSString *linkString = @"https://google.com";
+  NSURL *link = [NSURL URLWithString:linkString];
+
+  FIRDynamicLinkComponents *components =
+      [FIRDynamicLinkComponents componentsWithLink:link
                                    domainURIPrefix:@"this is invalid domain URI Prefix"];
 
   XCTAssertNil(components.url);
