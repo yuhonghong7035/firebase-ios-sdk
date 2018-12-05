@@ -61,6 +61,8 @@ inline model::FieldPath Field(absl::string_view field) {
   return model::FieldPath::FromServerFormat(field);
 }
 
+model::FieldMask FieldMask(const std::vector<absl::string_view>& fields);
+
 inline model::ResourcePath Resource(absl::string_view field) {
   return model::ResourcePath::FromString(field);
 }

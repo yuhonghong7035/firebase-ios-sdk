@@ -29,6 +29,8 @@
 #include "Firestore/core/include/firebase/firestore/firestore_errors.h"
 #include "Firestore/core/include/firebase/firestore/timestamp.h"
 #include "Firestore/core/src/firebase/firestore/model/document.h"
+#include "Firestore/core/src/firebase/firestore/model/field_path.h"
+#include "Firestore/core/src/firebase/firestore/model/mutation.h"
 #include "Firestore/core/src/firebase/firestore/model/no_document.h"
 #include "Firestore/core/src/firebase/firestore/model/resource_path.h"
 #include "Firestore/core/src/firebase/firestore/nanopb/reader.h"
@@ -46,13 +48,19 @@ using firebase::Timestamp;
 using firebase::TimestampInternal;
 using firebase::firestore::core::Query;
 using firebase::firestore::model::DatabaseId;
+using firebase::firestore::model::DeleteMutation;
 using firebase::firestore::model::Document;
 using firebase::firestore::model::DocumentKey;
+using firebase::firestore::model::FieldPath;
 using firebase::firestore::model::FieldValue;
 using firebase::firestore::model::MaybeDocument;
+using firebase::firestore::model::Mutation;
 using firebase::firestore::model::NoDocument;
 using firebase::firestore::model::ObjectValue;
+using firebase::firestore::model::PatchMutation;
+using firebase::firestore::model::Precondition;
 using firebase::firestore::model::ResourcePath;
+using firebase::firestore::model::SetMutation;
 using firebase::firestore::model::SnapshotVersion;
 using firebase::firestore::nanopb::Reader;
 using firebase::firestore::nanopb::Writer;
@@ -495,6 +503,160 @@ google_firestore_v1beta1_Target_QueryTarget Serializer::EncodeQueryTarget(
   // TODO(rsgowman): Encode the endat.
 
   return result;
+}
+
+google_firestore_v1beta1_Write Serializer::EncodeMutation(
+    const Mutation& mutation) const {
+  google_firestore_v1beta1_Write result{};
+
+  switch (mutation.type()) {
+    case Mutation::Type::kSet:
+      result.which_operation = google_firestore_v1beta1_Write_update_tag;
+      result.update = EncodeDocument(
+          mutation.key(),
+          static_cast<const SetMutation&>(mutation).value().object_value());
+      break;
+
+    case Mutation::Type::kPatch: {
+      result.which_operation = google_firestore_v1beta1_Write_update_tag;
+      const PatchMutation& patch_mutation =
+          static_cast<const PatchMutation&>(mutation);
+      result.update =
+          EncodeDocument(mutation.key(), patch_mutation.value().object_value());
+      result.update_mask = EncodeDocumentMask(patch_mutation.mask());
+      break;
+    }
+
+    case Mutation::Type::kTransform:
+      // TODO(rsgowman): implement.
+      abort();
+
+    case Mutation::Type::kDelete:
+      result.which_operation = google_firestore_v1beta1_Write_delete_tag;
+      result.delete_ = EncodeString(EncodeKey(mutation.key()));
+      break;
+  }
+
+  if (!mutation.precondition().IsNone()) {
+    result.current_document = EncodePrecondition(mutation.precondition());
+  }
+
+  return result;
+}
+
+std::unique_ptr<model::Mutation> Serializer::DecodeMutation(
+    nanopb::Reader* reader, const google_firestore_v1beta1_Write& proto) const {
+  Precondition precondition =
+      DecodePrecondition(reader, proto.current_document);
+
+  switch (proto.which_operation) {
+    case google_firestore_v1beta1_Write_update_tag:
+      if (proto.update_mask.field_paths_count > 0) {
+        return absl::make_unique<PatchMutation>(
+            DecodeKey(reader, DecodeString(proto.update.name)),
+            FieldValue::FromMap(DecodeFields(reader, proto.update.fields_count,
+                                             proto.update.fields)),
+            DecodeDocumentMask(proto.update_mask), std::move(precondition));
+      } else {
+        return absl::make_unique<SetMutation>(
+            DecodeKey(reader, DecodeString(proto.update.name)),
+            FieldValue::FromMap(DecodeFields(reader, proto.update.fields_count,
+                                             proto.update.fields)),
+            std::move(precondition));
+      }
+
+    case google_firestore_v1beta1_Write_delete_tag:
+      return absl::make_unique<DeleteMutation>(
+          DecodeKey(reader, DecodeString(proto.delete_)),
+          std::move(precondition));
+
+    case google_firestore_v1beta1_Write_transform_tag:
+      // TODO(rsgowman): implement.
+      abort();
+
+    default:
+      reader->Fail(StringFormat("Unknown mutation operation: %s",
+                                proto.which_operation));
+      return nullptr;
+  }
+
+  UNREACHABLE();
+}
+
+/* static */
+google_firestore_v1beta1_Precondition Serializer::EncodePrecondition(
+    const Precondition& precondition) {
+  google_firestore_v1beta1_Precondition result{};
+  switch (precondition.type()) {
+    case Precondition::Type::None:
+      HARD_FAIL("Can't serialize an empty precondition");
+
+    case Precondition::Type::UpdateTime:
+      result.which_condition_type =
+          google_firestore_v1beta1_Precondition_update_time_tag;
+      result.update_time = EncodeVersion(precondition.update_time());
+      return result;
+
+    case Precondition::Type::Exists:
+      result.which_condition_type =
+          google_firestore_v1beta1_Precondition_exists_tag;
+      result.exists = precondition.exists();
+      return result;
+  }
+
+  UNREACHABLE();
+}
+
+/* static */
+Precondition Serializer::DecodePrecondition(
+    nanopb::Reader* reader,
+    const google_firestore_v1beta1_Precondition& precondition) {
+  switch (precondition.which_condition_type) {
+    case google_firestore_v1beta1_Precondition_update_time_tag:
+      // TODO(rsgowman): Implement
+      abort();
+
+    case google_firestore_v1beta1_Precondition_exists_tag:
+      return Precondition::Exists(precondition.exists);
+
+    case 0:
+      // Precondition not set. (Unlike libprotobuf, nanopb does not generate a
+      // constant for this, so we use '0' in the case statement.)
+      return Precondition::None();
+
+    default:
+      reader->Fail(StringFormat("Unknown precondition (%s)",
+                                precondition.which_condition_type));
+      return Precondition::None();
+  }
+
+  UNREACHABLE();
+}
+
+/* static */
+google_firestore_v1beta1_DocumentMask Serializer::EncodeDocumentMask(
+    const model::FieldMask& mask) {
+  google_firestore_v1beta1_DocumentMask result{};
+  result.field_paths_count = mask.size();
+  result.field_paths = MakeArray<pb_bytes_array_t*>(mask.size());
+  int i = 0;
+  for (const FieldPath& path : mask) {
+    result.field_paths[i++] = EncodeString(path.CanonicalString());
+  }
+  return result;
+}
+
+/* static */
+model::FieldMask Serializer::DecodeDocumentMask(
+    const google_firestore_v1beta1_DocumentMask& proto) {
+  int count = proto.field_paths_count;
+  std::vector<FieldPath> paths;
+  paths.reserve(count);
+  for (int i = 0; i < count; i++) {
+    paths.push_back(
+        FieldPath::FromServerFormat(DecodeString(proto.field_paths[i])));
+  }
+  return model::FieldMask(paths);
 }
 
 ResourcePath DecodeQueryPath(Reader* reader, absl::string_view name) {

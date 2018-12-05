@@ -17,13 +17,16 @@
 #include "Firestore/core/src/firebase/firestore/local/local_serializer.h"
 
 #include "Firestore/Protos/cpp/firestore/local/maybe_document.pb.h"
+#include "Firestore/Protos/cpp/firestore/local/mutation.pb.h"
 #include "Firestore/Protos/cpp/firestore/local/target.pb.h"
 #include "Firestore/Protos/cpp/google/firestore/v1beta1/firestore.pb.h"
 #include "Firestore/core/src/firebase/firestore/core/query.h"
 #include "Firestore/core/src/firebase/firestore/local/query_data.h"
 #include "Firestore/core/src/firebase/firestore/model/field_value.h"
 #include "Firestore/core/src/firebase/firestore/model/maybe_document.h"
+#include "Firestore/core/src/firebase/firestore/model/mutation.h"
 #include "Firestore/core/src/firebase/firestore/model/no_document.h"
+#include "Firestore/core/src/firebase/firestore/model/precondition.h"
 #include "Firestore/core/src/firebase/firestore/model/snapshot_version.h"
 #include "Firestore/core/src/firebase/firestore/model/types.h"
 #include "Firestore/core/src/firebase/firestore/nanopb/reader.h"
@@ -39,14 +42,16 @@ namespace firestore {
 namespace local {
 
 namespace v1beta1 = google::firestore::v1beta1;
-using ::google::protobuf::util::MessageDifferencer;
 using core::Query;
+using ::google::protobuf::util::MessageDifferencer;
 using model::DatabaseId;
 using model::Document;
 using model::DocumentKey;
 using model::FieldValue;
 using model::ListenSequenceNumber;
 using model::MaybeDocument;
+using model::Mutation;
+using model::MutationBatch;
 using model::NoDocument;
 using model::SnapshotVersion;
 using model::TargetId;
@@ -54,6 +59,7 @@ using nanopb::Reader;
 using nanopb::Writer;
 using testutil::DeletedDoc;
 using testutil::Doc;
+using testutil::Field;
 using testutil::Query;
 using util::Status;
 
@@ -96,6 +102,14 @@ class LocalSerializerTest : public ::testing::Test {
     // bytes with our (nanopb based) deserializer and ensure the result is the
     // same as the expected model.
     ExpectDeserializationRoundTrip(query_data, proto);
+  }
+
+  void ExpectRoundTrip(const MutationBatch& model,
+                       const ::firestore::client::WriteBatch& proto) {
+    // TODO(rsgowman): These 'ExpectRoundTrip' functions all look the same.
+    // Template them.
+    ExpectSerializationRoundTrip(model, proto);
+    ExpectDeserializationRoundTrip(model, proto);
   }
 
   /**
@@ -205,11 +219,102 @@ class LocalSerializerTest : public ::testing::Test {
     return bytes;
   }
 
+  void ExpectSerializationRoundTrip(
+      const MutationBatch& model,
+      const ::firestore::client::WriteBatch& proto) {
+    std::vector<uint8_t> bytes = EncodeMutationBatch(&serializer, model);
+    ::firestore::client::WriteBatch actual_proto;
+    bool ok = actual_proto.ParseFromArray(bytes.data(),
+                                          static_cast<int>(bytes.size()));
+    EXPECT_TRUE(ok);
+    EXPECT_TRUE(msg_diff.Compare(proto, actual_proto)) << message_differences;
+  }
+
+  void ExpectDeserializationRoundTrip(
+      const MutationBatch& model,
+      const ::firestore::client::WriteBatch& proto) {
+    std::vector<uint8_t> bytes(proto.ByteSizeLong());
+    bool status =
+        proto.SerializeToArray(bytes.data(), static_cast<int>(bytes.size()));
+    EXPECT_TRUE(status);
+    Reader reader = Reader::Wrap(bytes.data(), bytes.size());
+
+    firestore_client_WriteBatch nanopb_proto =
+        firestore_client_WriteBatch_init_zero;
+    reader.ReadNanopbMessage(firestore_client_WriteBatch_fields, &nanopb_proto);
+    MutationBatch actual_model =
+        serializer.DecodeMutationBatch(&reader, nanopb_proto);
+    reader.FreeNanopbMessage(firestore_client_WriteBatch_fields, &nanopb_proto);
+
+    EXPECT_OK(reader.status());
+    EXPECT_EQ(model, actual_model);
+  }
+
+  std::vector<uint8_t> EncodeMutationBatch(local::LocalSerializer* serializer,
+                                           const MutationBatch& batch) {
+    std::vector<uint8_t> bytes;
+    Writer writer = Writer::Wrap(&bytes);
+    firestore_client_WriteBatch proto = serializer->EncodeMutationBatch(batch);
+    writer.WriteNanopbMessage(firestore_client_WriteBatch_fields, &proto);
+    serializer->FreeNanopbMessage(firestore_client_WriteBatch_fields, &proto);
+    return bytes;
+  }
+
   std::string message_differences;
   MessageDifferencer msg_diff;
 };
 
-// TODO(rsgowman): EncodesMutationBatch
+TEST_F(LocalSerializerTest, EncodesMutationBatch) {
+  std::unique_ptr<Mutation> set =
+      testutil::SetMutation("foo/bar", {{"a", FieldValue::FromString("b")},
+                                        {"num", FieldValue::FromInteger(1)}});
+
+  std::unique_ptr<Mutation> patch = absl::make_unique<model::PatchMutation>(
+      testutil::Key("bar/baz"),
+      model::FieldValue::FromMap({{"a", FieldValue::FromString("b")},
+                                  {"num", FieldValue::FromInteger(1)}}),
+      testutil::FieldMask({"a"}), model::Precondition::Exists(true));
+
+  std::unique_ptr<Mutation> del = testutil::DeleteMutation("baz/quux");
+
+  Timestamp write_time = Timestamp::Now();
+  MutationBatch model(42, write_time,
+                      {std::move(set), std::move(patch), std::move(del)});
+
+  v1beta1::Write set_proto;
+  set_proto.mutable_update()->set_name(
+      "projects/p/databases/d/documents/foo/bar");
+  v1beta1::Value str_value_proto;
+  str_value_proto.set_string_value("b");
+  v1beta1::Value int_value_proto;
+  int_value_proto.set_integer_value(1);
+  (*set_proto.mutable_update()->mutable_fields())["a"] = str_value_proto;
+  (*set_proto.mutable_update()->mutable_fields())["num"] = int_value_proto;
+
+  v1beta1::Write patch_proto;
+  patch_proto.mutable_update()->set_name(
+      "projects/p/databases/d/documents/bar/baz");
+  (*patch_proto.mutable_update()->mutable_fields())["a"] = str_value_proto;
+  (*patch_proto.mutable_update()->mutable_fields())["num"] = int_value_proto;
+  patch_proto.mutable_update_mask()->add_field_paths("a");
+  patch_proto.mutable_current_document()->set_exists(true);
+
+  v1beta1::Write del_proto;
+  del_proto.set_delete_("projects/p/databases/d/documents/baz/quux");
+
+  ::google::protobuf::Timestamp write_time_proto;
+  write_time_proto.set_seconds(write_time.seconds());
+  write_time_proto.set_nanos(write_time.nanoseconds());
+
+  ::firestore::client::WriteBatch batch_proto;
+  batch_proto.set_batch_id(42);
+  *batch_proto.mutable_writes()->Add() = set_proto;
+  *batch_proto.mutable_writes()->Add() = patch_proto;
+  *batch_proto.mutable_writes()->Add() = del_proto;
+  *batch_proto.mutable_local_write_time() = write_time_proto;
+
+  ExpectRoundTrip(model, batch_proto);
+}
 
 TEST_F(LocalSerializerTest, EncodesDocumentAsMaybeDocument) {
   Document doc = Doc("some/path", /*version=*/42,

@@ -20,8 +20,18 @@ namespace firebase {
 namespace firestore {
 namespace testutil {
 
+model::FieldMask FieldMask(const std::vector<absl::string_view>& fields) {
+  std::vector<model::FieldPath> mask;
+  mask.reserve(fields.size());
+  for (absl::string_view field : fields) {
+    mask.push_back(Field(field));
+  }
+  return model::FieldMask(mask);
+}
+
 bool isDelete(const model::FieldValue& fv) {
-  return fv.type() == model::FieldValue::Type::String && fv.string_value() == kDeleteSentinel;
+  return fv.type() == model::FieldValue::Type::String &&
+         fv.string_value() == kDeleteSentinel;
 }
 
 std::unique_ptr<model::PatchMutation> PatchMutation(

@@ -65,6 +65,10 @@ class Precondition {
     return type_ == Type::None;
   }
 
+  bool exists() const {
+    return exists_;
+  }
+
   Type type() const {
     return type_;
   }

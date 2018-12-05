@@ -21,10 +21,12 @@
 #include <vector>
 
 #include "Firestore/Protos/nanopb/firestore/local/maybe_document.nanopb.h"
+#include "Firestore/Protos/nanopb/firestore/local/mutation.nanopb.h"
 #include "Firestore/Protos/nanopb/firestore/local/target.nanopb.h"
 #include "Firestore/core/src/firebase/firestore/local/query_data.h"
 #include "Firestore/core/src/firebase/firestore/model/document.h"
 #include "Firestore/core/src/firebase/firestore/model/maybe_document.h"
+#include "Firestore/core/src/firebase/firestore/model/mutation.h"
 #include "Firestore/core/src/firebase/firestore/model/no_document.h"
 #include "Firestore/core/src/firebase/firestore/model/types.h"
 #include "Firestore/core/src/firebase/firestore/nanopb/reader.h"
@@ -103,6 +105,14 @@ class LocalSerializer {
    */
   QueryData DecodeQueryData(nanopb::Reader* reader,
                             const firestore_client_Target& proto) const;
+
+  /** Encodes a MutationBatch model for local storage in the mutation queue. */
+  firestore_client_WriteBatch EncodeMutationBatch(
+      const model::MutationBatch& batch) const;
+
+  /** Decodes a WriteBatch proto into a MutationBatch model. */
+  model::MutationBatch DecodeMutationBatch(
+      nanopb::Reader* reader, const firestore_client_WriteBatch& proto) const;
 
  private:
   /**

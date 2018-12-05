@@ -164,6 +164,10 @@ class SetMutation : public Mutation {
     return Type::kSet;
   }
 
+  const FieldValue& value() const {
+    return value_;
+  }
+
   // TODO(rsgowman): ApplyToRemoteDocument()
 
   std::shared_ptr<const MaybeDocument> ApplyToLocalView(
@@ -200,6 +204,13 @@ class PatchMutation : public Mutation {
 
   Type type() const override {
     return Type::kPatch;
+  }
+
+  const FieldValue& value() const {
+    return value_;
+  }
+  const FieldMask& mask() const {
+    return mask_;
   }
 
   // TODO(rsgowman): ApplyToRemoteDocument()

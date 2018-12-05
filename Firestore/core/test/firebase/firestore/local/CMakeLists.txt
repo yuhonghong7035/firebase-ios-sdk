@@ -31,4 +31,5 @@ cc_test(
     firebase_firestore_local
     firebase_firestore_model
     firebase_firestore_protos_libprotobuf
+    firebase_firestore_testutil
 )

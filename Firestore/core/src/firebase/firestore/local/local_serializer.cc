@@ -37,6 +37,8 @@ namespace local {
 using core::Query;
 using model::Document;
 using model::MaybeDocument;
+using model::Mutation;
+using model::MutationBatch;
 using model::NoDocument;
 using model::ObjectValue;
 using model::SnapshotVersion;
@@ -206,6 +208,36 @@ QueryData LocalSerializer::DecodeQueryData(
   return QueryData(std::move(query), target_id, sequence_number,
                    QueryPurpose::kListen, std::move(version),
                    std::move(resume_token));
+}
+
+firestore_client_WriteBatch LocalSerializer::EncodeMutationBatch(
+    const MutationBatch& batch) const {
+  firestore_client_WriteBatch result{};
+
+  result.batch_id = batch.batch_id();
+  result.local_write_time =
+      rpc_serializer_.EncodeTimestamp(batch.local_write_time());
+  size_t count = batch.mutations().size();
+  result.writes = MakeArray<google_firestore_v1beta1_Write>(count);
+  result.writes_count = count;
+  int i = 0;
+  for (const std::shared_ptr<Mutation>& mutation : batch.mutations()) {
+    result.writes[i++] = rpc_serializer_.EncodeMutation(*mutation);
+  }
+  return result;
+}
+
+model::MutationBatch LocalSerializer::DecodeMutationBatch(
+    nanopb::Reader* reader, const firestore_client_WriteBatch& proto) const {
+  std::vector<std::shared_ptr<Mutation>> mutations;
+  for (size_t i = 0; i < proto.writes_count; i++) {
+    mutations.push_back(
+        rpc_serializer_.DecodeMutation(reader, proto.writes[i]));
+  }
+  return MutationBatch(
+      proto.batch_id,
+      rpc_serializer_.DecodeTimestamp(reader, proto.local_write_time),
+      std::move(mutations));
 }
 
 }  // namespace local

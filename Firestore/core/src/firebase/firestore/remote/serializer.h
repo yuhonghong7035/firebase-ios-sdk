@@ -25,12 +25,14 @@
 
 #include "Firestore/Protos/nanopb/google/firestore/v1beta1/document.nanopb.h"
 #include "Firestore/Protos/nanopb/google/firestore/v1beta1/firestore.nanopb.h"
+#include "Firestore/Protos/nanopb/google/firestore/v1beta1/write.nanopb.h"
 #include "Firestore/core/src/firebase/firestore/core/query.h"
 #include "Firestore/core/src/firebase/firestore/model/database_id.h"
 #include "Firestore/core/src/firebase/firestore/model/document.h"
 #include "Firestore/core/src/firebase/firestore/model/document_key.h"
 #include "Firestore/core/src/firebase/firestore/model/field_value.h"
 #include "Firestore/core/src/firebase/firestore/model/maybe_document.h"
+#include "Firestore/core/src/firebase/firestore/model/mutation.h"
 #include "Firestore/core/src/firebase/firestore/model/no_document.h"
 #include "Firestore/core/src/firebase/firestore/model/snapshot_version.h"
 #include "Firestore/core/src/firebase/firestore/nanopb/reader.h"
@@ -207,6 +209,13 @@ class Serializer {
       nanopb::Reader* reader,
       const google_firestore_v1beta1_Target_QueryTarget& proto);
 
+  /** Converts a Mutation model to a Write proto */
+  google_firestore_v1beta1_Write EncodeMutation(
+      const model::Mutation& mutation) const;
+  std::unique_ptr<model::Mutation> DecodeMutation(
+      nanopb::Reader* reader,
+      const google_firestore_v1beta1_Write& proto) const;
+
  private:
   std::unique_ptr<model::Document> DecodeFoundDocument(
       nanopb::Reader* reader,
@@ -215,11 +224,18 @@ class Serializer {
       nanopb::Reader* reader,
       const google_firestore_v1beta1_BatchGetDocumentsResponse& response) const;
 
-  static void EncodeFieldsEntry(const model::ObjectValue::Map::value_type& kv,
-                                uint32_t key_tag,
-                                uint32_t value_tag);
-
   std::string EncodeQueryPath(const model::ResourcePath& path) const;
+
+  static google_firestore_v1beta1_Precondition EncodePrecondition(
+      const model::Precondition& precondition);
+  static model::Precondition DecodePrecondition(
+      nanopb::Reader* reader,
+      const google_firestore_v1beta1_Precondition& proto);
+
+  static google_firestore_v1beta1_DocumentMask EncodeDocumentMask(
+      const model::FieldMask& mask);
+  static model::FieldMask DecodeDocumentMask(
+      const google_firestore_v1beta1_DocumentMask& proto);
 
   const model::DatabaseId& database_id_;
   const std::string database_name_;
