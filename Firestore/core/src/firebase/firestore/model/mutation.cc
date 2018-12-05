@@ -20,6 +20,7 @@
 
 #include "Firestore/core/src/firebase/firestore/model/document.h"
 #include "Firestore/core/src/firebase/firestore/model/field_path.h"
+#include "Firestore/core/src/firebase/firestore/model/no_document.h"
 #include "Firestore/core/src/firebase/firestore/util/hard_assert.h"
 
 namespace firebase {
@@ -84,11 +85,7 @@ std::shared_ptr<const MaybeDocument> PatchMutation::ApplyToLocalView(
   VerifyKeyMatches(maybe_doc.get());
 
   if (!precondition().IsValidFor(maybe_doc.get())) {
-    if (maybe_doc) {
-      return absl::make_unique<MaybeDocument>(maybe_doc->key(),
-                                              maybe_doc->version());
-    }
-    return nullptr;
+    return maybe_doc;
   }
 
   SnapshotVersion version = GetPostMutationVersion(maybe_doc.get());
@@ -118,6 +115,25 @@ FieldValue PatchMutation::PatchObject(FieldValue obj) const {
     }
   }
   return obj;
+}
+
+DeleteMutation::DeleteMutation(DocumentKey&& key, Precondition&& precondition)
+    : Mutation(std::move(key), std::move(precondition)) {
+}
+
+std::shared_ptr<const MaybeDocument> DeleteMutation::ApplyToLocalView(
+    const std::shared_ptr<const MaybeDocument>& maybe_doc,
+    const MaybeDocument*,
+    const Timestamp&) const {
+  VerifyKeyMatches(maybe_doc.get());
+
+  if (!precondition().IsValidFor(maybe_doc.get())) {
+    return maybe_doc;
+  }
+
+  // TODO(rsgowman): Add: `/*has_committed_mutations=*/false` as the last param
+  // to the NoDocument ctor. (heldwriteacks)
+  return absl::make_unique<NoDocument>(key(), SnapshotVersion::None());
 }
 
 }  // namespace model

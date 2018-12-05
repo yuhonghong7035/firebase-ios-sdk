@@ -34,6 +34,7 @@
 #include "Firestore/core/src/firebase/firestore/model/field_value.h"
 #include "Firestore/core/src/firebase/firestore/model/mutation.h"
 #include "Firestore/core/src/firebase/firestore/model/no_document.h"
+#include "Firestore/core/src/firebase/firestore/model/precondition.h"
 #include "Firestore/core/src/firebase/firestore/model/resource_path.h"
 #include "Firestore/core/src/firebase/firestore/model/snapshot_version.h"
 #include "Firestore/core/src/firebase/firestore/util/hard_assert.h"
@@ -148,6 +149,12 @@ inline std::unique_ptr<model::PatchMutation> PatchMutation(
     const model::ObjectValue::Map& values,
     const std::vector<model::FieldPath>& update_mask) {
   return PatchMutation(path, values, &update_mask);
+}
+
+inline std::unique_ptr<model::DeleteMutation> DeleteMutation(
+    absl::string_view path) {
+  return absl::make_unique<model::DeleteMutation>(Key(path),
+                                                  model::Precondition::None());
 }
 
 inline std::vector<uint8_t> ResumeToken(int64_t snapshot_version) {

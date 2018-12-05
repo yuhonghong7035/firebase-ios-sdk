@@ -177,6 +177,19 @@ class PatchMutation : public Mutation {
   const FieldMask mask_;
 };
 
+/** Represents a Delete operation. */
+class DeleteMutation : public Mutation {
+ public:
+  DeleteMutation(DocumentKey&& key, Precondition&& precondition);
+
+  // TODO(rsgowman): ApplyToRemoteDocument()
+
+  std::shared_ptr<const MaybeDocument> ApplyToLocalView(
+      const std::shared_ptr<const MaybeDocument>& maybe_doc,
+      const MaybeDocument* base_doc,
+      const Timestamp& local_write_time) const override;
+};
+
 }  // namespace model
 }  // namespace firestore
 }  // namespace firebase

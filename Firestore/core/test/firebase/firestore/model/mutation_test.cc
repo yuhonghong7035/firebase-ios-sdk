@@ -147,7 +147,14 @@ TEST(Mutation, PatchesPrimitiveValue) {
 }
 
 TEST(Mutation, PatchingDeletedDocumentsDoesNothing) {
-  // TODO(rsgowman)
+  auto base_doc =
+      std::make_shared<MaybeDocument>(DeletedDoc("collection/key", 0));
+  std::unique_ptr<Mutation> patch =
+      PatchMutation("collection/key", {{"foo", FieldValue::FromString("bar")}});
+  std::shared_ptr<const MaybeDocument> patched_doc =
+      patch->ApplyToLocalView(base_doc, base_doc.get(), Timestamp::Now());
+  ASSERT_TRUE(patched_doc);
+  EXPECT_EQ(*patched_doc.get(), *base_doc.get());
 }
 
 TEST(Mutation, AppliesLocalServerTimestampTransformsToDocuments) {
@@ -220,7 +227,16 @@ TEST(Mutation, AppliesServerAckedArrayTransformsToDocuments) {
 }
 
 TEST(Mutation, DeleteDeletes) {
-  // TODO(rsgowman)
+  auto base_doc = std::make_shared<Document>(
+      Doc("collection/key", 0, {{"foo", FieldValue::FromString("bar")}}));
+
+  std::unique_ptr<model::DeleteMutation> delete_mutation =
+      testutil::DeleteMutation("collection/key");
+  std::shared_ptr<const MaybeDocument> deleted_doc =
+      delete_mutation->ApplyToLocalView(base_doc, base_doc.get(),
+                                        Timestamp::Now());
+  ASSERT_TRUE(deleted_doc);
+  EXPECT_EQ(*deleted_doc.get(), DeletedDoc("collection/key", 0));
 }
 
 TEST(Mutation, SetWithMutationResult) {
