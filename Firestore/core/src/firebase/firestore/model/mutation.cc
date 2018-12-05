@@ -152,6 +152,25 @@ std::shared_ptr<const MaybeDocument> DeleteMutation::ApplyToLocalView(
   return absl::make_unique<NoDocument>(key(), SnapshotVersion::None());
 }
 
+MutationBatch::MutationBatch(int batch_id,
+                             Timestamp local_write_time,
+                             std::vector<std::shared_ptr<Mutation>> mutations)
+    : batch_id_(batch_id),
+      local_write_time_(std::move(local_write_time)),
+      mutations_(std::move(mutations)) {
+}
+
+bool operator==(const MutationBatch& lhs, const MutationBatch& rhs) {
+  if (lhs.batch_id_ != rhs.batch_id_) return false;
+  if (lhs.local_write_time_ != rhs.local_write_time_) return false;
+  if (lhs.mutations_.size() != rhs.mutations_.size()) return false;
+  for (size_t i = 0; i < lhs.mutations_.size(); i++) {
+    if (*lhs.mutations_[i] != *rhs.mutations_[i]) return false;
+  }
+
+  return true;
+}
+
 }  // namespace model
 }  // namespace firestore
 }  // namespace firebase

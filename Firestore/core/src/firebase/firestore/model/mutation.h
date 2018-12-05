@@ -18,6 +18,7 @@
 #define FIRESTORE_CORE_SRC_FIREBASE_FIRESTORE_MODEL_MUTATION_H_
 
 #include <memory>
+#include <vector>
 
 #include "Firestore/core/src/firebase/firestore/model/document_key.h"
 #include "Firestore/core/src/firebase/firestore/model/field_mask.h"
@@ -238,6 +239,44 @@ class DeleteMutation : public Mutation {
   // IsEqualTo explicitly not overridden. DeleteMutation has nothing further to
   // add to the definition of equality.
 };
+
+/**
+ * A batch of mutations that will be sent as one unit to the backend. Batches
+ * can be marked as a tombstone if the mutation queue does not remove them
+ * immediately. When a batch is a tombstone it has no mutations.
+ */
+class MutationBatch {
+ public:
+  /**
+   * @param mutations Pointers to the mutations to be applied.
+   */
+  MutationBatch(int batch_id,
+                Timestamp local_write_time,
+                std::vector<std::shared_ptr<Mutation>> mutations);
+
+  friend bool operator==(const MutationBatch& lhs, const MutationBatch& rhs);
+
+  int batch_id() const {
+    return batch_id_;
+  }
+  Timestamp local_write_time() const {
+    return local_write_time_;
+  }
+  const std::vector<std::shared_ptr<Mutation>>& mutations() const {
+    return mutations_;
+  }
+
+ private:
+  const int batch_id_;
+  const Timestamp local_write_time_;
+  const std::vector<std::shared_ptr<Mutation>> mutations_;
+};
+
+bool operator==(const MutationBatch& lhs, const MutationBatch& rhs);
+
+inline bool operator!=(const MutationBatch& lhs, const MutationBatch& rhs) {
+  return !(lhs == rhs);
+}
 
 }  // namespace model
 }  // namespace firestore
