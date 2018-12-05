@@ -20,6 +20,10 @@ namespace firebase {
 namespace firestore {
 namespace testutil {
 
+bool isDelete(const model::FieldValue& fv) {
+  return fv.type() == model::FieldValue::Type::String && fv.string_value() == kDeleteSentinel;
+}
+
 std::unique_ptr<model::PatchMutation> PatchMutation(
     absl::string_view path,
     const model::ObjectValue::Map& values,
@@ -30,7 +34,7 @@ std::unique_ptr<model::PatchMutation> PatchMutation(
   for (const auto& kv : values) {
     model::FieldPath field_path = Field(kv.first);
     object_mask.push_back(field_path);
-    if (kv.second.string_value() != kDeleteSentinel) {
+    if (!isDelete(kv.second)) {
       object_value = object_value.Set(field_path, kv.second);
     }
   }
