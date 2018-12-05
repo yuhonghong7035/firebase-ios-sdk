@@ -75,8 +75,17 @@ namespace model {
  */
 class Mutation {
  public:
+  enum class Type {
+    kSet,
+    kPatch,
+    kTransform,
+    kDelete,
+  };
+
   virtual ~Mutation() {
   }
+
+  virtual Type type() const = 0;
 
   const DocumentKey& key() const {
     return key_;
@@ -109,8 +118,23 @@ class Mutation {
       const MaybeDocument* base_doc,
       const Timestamp& local_write_time) const = 0;
 
+  friend bool operator==(const Mutation& lhs, const Mutation& rhs) {
+    return lhs.IsEqualTo(rhs);
+  }
+
  protected:
   Mutation(DocumentKey&& key, Precondition&& precondition);
+
+  /**
+   * Derived classes should override this method to implement equality. However,
+   * derived classes should also call this method as part of their equality
+   * checks to ensure the data managed by the base class is equal.
+   *
+   * This method explicitly checks the type() to ensure they're equal, implying
+   * that derived classes can assume the types are the same in their IsEqualTo
+   * method, assuming they call this parent IsEqualTo first.
+   */
+  virtual bool IsEqualTo(const Mutation& other) const;
 
   void VerifyKeyMatches(const MaybeDocument* maybe_doc) const;
 
@@ -120,6 +144,10 @@ class Mutation {
   const DocumentKey key_;
   const Precondition precondition_;
 };
+
+inline bool operator!=(const Mutation& lhs, const Mutation& rhs) {
+  return !(lhs == rhs);
+}
 
 /**
  * A mutation that creates or replaces the document at the given key with the
@@ -131,12 +159,19 @@ class SetMutation : public Mutation {
               FieldValue&& value,
               Precondition&& precondition);
 
+  Type type() const override {
+    return Type::kSet;
+  }
+
   // TODO(rsgowman): ApplyToRemoteDocument()
 
   std::shared_ptr<const MaybeDocument> ApplyToLocalView(
       const std::shared_ptr<const MaybeDocument>& maybe_doc,
       const MaybeDocument* base_doc,
       const Timestamp& local_write_time) const override;
+
+ protected:
+  bool IsEqualTo(const Mutation& other) const override;
 
  private:
   const FieldValue value_;
@@ -162,12 +197,19 @@ class PatchMutation : public Mutation {
                 FieldMask&& mask,
                 Precondition&& precondition);
 
+  Type type() const override {
+    return Type::kPatch;
+  }
+
   // TODO(rsgowman): ApplyToRemoteDocument()
 
   std::shared_ptr<const MaybeDocument> ApplyToLocalView(
       const std::shared_ptr<const MaybeDocument>& maybe_doc,
       const MaybeDocument* base_doc,
       const Timestamp& local_write_time) const override;
+
+ protected:
+  bool IsEqualTo(const Mutation& other) const override;
 
  private:
   FieldValue PatchDocument(const MaybeDocument* maybe_doc) const;
@@ -182,12 +224,19 @@ class DeleteMutation : public Mutation {
  public:
   DeleteMutation(DocumentKey&& key, Precondition&& precondition);
 
+  Type type() const override {
+    return Type::kDelete;
+  }
+
   // TODO(rsgowman): ApplyToRemoteDocument()
 
   std::shared_ptr<const MaybeDocument> ApplyToLocalView(
       const std::shared_ptr<const MaybeDocument>& maybe_doc,
       const MaybeDocument* base_doc,
       const Timestamp& local_write_time) const override;
+
+  // IsEqualTo explicitly not overridden. DeleteMutation has nothing further to
+  // add to the definition of equality.
 };
 
 }  // namespace model

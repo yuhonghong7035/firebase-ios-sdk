@@ -31,6 +31,11 @@ Mutation::Mutation(DocumentKey&& key, Precondition&& precondition)
     : key_(std::move(key)), precondition_(std::move(precondition)) {
 }
 
+bool Mutation::IsEqualTo(const Mutation& other) const {
+  return key_ == other.key_ && precondition_ == other.precondition_ &&
+         type() == other.type();
+}
+
 void Mutation::VerifyKeyMatches(const MaybeDocument* maybe_doc) const {
   if (maybe_doc) {
     HARD_ASSERT(maybe_doc->key() == key(),
@@ -69,6 +74,11 @@ std::shared_ptr<const MaybeDocument> SetMutation::ApplyToLocalView(
                                      /*has_local_mutations=*/true);
 }
 
+bool SetMutation::IsEqualTo(const Mutation& other) const {
+  return Mutation::IsEqualTo(other) &&
+         value_ == static_cast<const SetMutation&>(other).value_;
+}
+
 PatchMutation::PatchMutation(DocumentKey&& key,
                              FieldValue&& value,
                              FieldMask&& mask,
@@ -92,6 +102,12 @@ std::shared_ptr<const MaybeDocument> PatchMutation::ApplyToLocalView(
   FieldValue new_data = PatchDocument(maybe_doc.get());
   return absl::make_unique<Document>(std::move(new_data), key(), version,
                                      /*has_local_mutations=*/true);
+}
+
+bool PatchMutation::IsEqualTo(const Mutation& other) const {
+  if (!Mutation::IsEqualTo(other)) return false;
+  const PatchMutation& p = static_cast<const PatchMutation&>(other);
+  return value_ == p.value_ && mask_ == p.mask_;
 }
 
 FieldValue PatchMutation::PatchDocument(const MaybeDocument* maybe_doc) const {
